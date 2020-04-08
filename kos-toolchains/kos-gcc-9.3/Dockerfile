@@ -1,0 +1,216 @@
+#
+# KOS complete toolchain image (einsteinx2/dcdev-kos-toolchain:gcc-9.3)
+# ----------------------------------------------------------------
+#
+# This image is meant to be used as a fully featured KOS development environment. It includes both the SH4 and
+# ARM cross-compiler toolchains, the full KallistiOS library, all included utilities and addons, and some extra
+# useful utilities and programs that you might need to compile any Dreamcast project. It's based on Alpine to keep
+# the size to a minimum, though convenience is preferred over a slightly larger image, hence the preinstalled tools
+# and the inclusion of the KOS and KOS-PORTS source code rather than the compiled binaries and headers only.
+# 
+# This image contains an entry scipt that automatically loads the KOS environment variables, so it can compile a
+# project or use any of the included tools without entering the interactive shell. If no command is provided, an
+# interactive bash shell is automatically launched.
+#
+# Example usage with a simple Makefile: `docker run -it --rm -v $PWD:/src einsteinx2/dcdev-kos-toolchain:gcc-9.3 make`
+# Example usage with a build script: `docker run -it --rm -v $PWD:/src einsteinx2/dcdev-kos-toolchain:gcc-9.3 ./dc_build.sh`
+# Example usage with an interactive bash shell: `docker run -it --rm -v $PWD:/src einsteinx2/dcdev-kos-toolchain:gcc-9.3`
+# 
+# Docker image build instructions:
+# Silence output for faster build: `docker build -t einsteinx2/dcdev-kos-toolchain:gcc-9.3 .`
+# Verbose output to help debugging: `docker build --build-arg VERBOSE=true -t einsteinx2/dcdev-kos-toolchain:gcc-9.3 .`
+
+#
+# Global Arguments
+#
+
+# Default to verbose output off as it should build faster without all of the console printing
+# NOTE: To debug build problems add the flag `--build-arg VERBOSE=true` when building the image
+ARG VERBOSE=false
+
+# For maximum speed, set this to the number of CPU threads you have
+# i.e. if you have a 4 core / 8 thread CPU, choose 8
+# (can be set using `--build-arg THREADS=8` when building)
+ARG THREADS=4
+
+# KOS git repository and branch to use
+# NOTE: To use a different repo or branch, for example to use your own fork instead of upstream,
+#       add the flag `--build-arg KOS_REPO="https://github.com/your_username/KallistiOS.git"` and/or
+#       add the flag `--build-arg KOS_BRANCH="your_branch"
+ARG KOS_REPO="https://github.com/KallistiOS/KallistiOS.git"
+ARG KOS_BRANCH="master"
+
+# KOS-PORTS git repository and branch to use
+# NOTE: To use a different repo or branch, for example to use your own fork instead of upstream,
+#       add the flag `--build-arg PORTS_REPO="https://github.com/your_username/kos-ports.git"` and/or
+#       add the flag `--build-arg PORTS_BRANCH="your_branch"
+ARG PORTS_REPO="https://github.com/KallistiOS/kos-ports.git"
+ARG PORTS_BRANCH="master"
+
+#
+# First stage: Pre-built GCC cross-compiler toolchain to build KOS 
+#
+
+FROM einsteinx2/dcdev-gcc-toolchain:gcc-9.3 as toolchain
+FROM einsteinx2/dcdev-gcc-base:latest as builder
+LABEL maintainer "Ben Baron <ben@einsteinx2.com>"
+
+# Set build arguments
+ARG VERBOSE
+ARG THREADS
+ARG KOS_REPO
+ARG KOS_BRANCH
+ARG PORTS_REPO
+ARG PORTS_BRANCH
+
+# Set environment variables
+ENV DCTOOLCHAIN="/opt/toolchains/dc"
+ENV KOS="$DCTOOLCHAIN/kos"
+ENV PORTS="$DCTOOLCHAIN/kos-ports"
+
+# Use the bash shell instead of sh for the build process
+SHELL ["/bin/bash", "-c"]
+
+# Copy the prebuilt GCC toolchain
+COPY --from=toolchain $DCTOOLCHAIN/sh-elf $DCTOOLCHAIN/sh-elf
+COPY --from=toolchain $DCTOOLCHAIN/arm-eabi $DCTOOLCHAIN/arm-eabi
+
+# Build KOS and patched GCC cross-compiler toolchain for SH4 (Main CPU) and ARM7DI (AICA Control CPU)
+RUN \
+    # Clone repositories
+    . /tmp/verbose.sh \
+    && printf "Cloning latest mainline KOS...$NL" >&2 \
+    && git clone --single-branch --branch $KOS_BRANCH $KOS_REPO $KOS &> $REDIRECT \
+    && printf "Done.\nCloning latest mainline KOS PORTS...$NL" >&2 \
+    && git clone --single-branch --branch $PORTS_BRANCH $PORTS_REPO $PORTS &> $REDIRECT \
+    && printf "Done.\n" >&2
+RUN \
+    # Configure environment
+    . /tmp/verbose.sh \
+    && printf "Configuring environment...$NL" >&2 \
+    && cp $KOS/doc/environ.sh.sample $KOS/environ.sh \
+    # NOTE: This is in single quotes on purpose so that ${KOS_BASE} is not evaluated
+    && printf '. ${KOS_BASE}/environ_dreamcast.sh' >> $KOS/environ.sh \
+    # NOTE: This is in double quotes on purpose so that $KOS is evaluated
+    && printf ". /etc/profile\n. $KOS/environ.sh\n" > /root/.bashrc \
+    && printf "Done.\n" >&2
+RUN \
+    # Build KOS
+    . /tmp/verbose.sh && . $KOS/environ.sh \
+    && printf "Building KOS...$NL" >&2 \
+    && make -j$THREADS -C $KOS &> $REDIRECT \
+    && printf "Done.\nCleaning KOS...$NL" >&2 \
+    && make -j$THREADS -C $KOS clean &> $REDIRECT \
+    && printf "Done.\n" >&2
+RUN \
+    # Build KOS Ports
+    . /tmp/verbose.sh && . $KOS/environ.sh \
+    && printf "Building KOS Ports...$NL" >&2 \
+    && make -C $KOS kos-ports_all &> $REDIRECT \
+    && printf "Done.\nCleaning KOS Ports...$NL" >&2 \
+    && make -C $KOS kos-ports_clean &> $REDIRECT \
+    && printf "Done.\n" >&2
+RUN \
+    # Build KOS addons
+    . /tmp/verbose.sh && . $KOS/environ.sh \
+    && printf "Building KOS addons...$NL" >&2 \
+    && make -j$THREADS -C $KOS/addons &> $REDIRECT \
+    && printf "Done.\nCleaning KOS addons...$NL" >&2 \
+    && find $KOS/addons -name "*.o" -delete \
+    && printf "Done.\n" >&2
+RUN \
+    # Build extra included utilities
+    . /tmp/verbose.sh && . $KOS/environ.sh \
+    && printf "Building extra included utilities...$NL" >&2 \
+    && sed -i 's/^DIRS.*/DIRS = bin2c bincnv dcbumpgen genromfs isotest kmgenc makejitter rdtest scramble vqenc wav2adpcm/' $KOS/utils/Makefile \
+    && make -j$THREADS -C $KOS/utils &> $REDIRECT \
+    && printf "Done.\nSymlinking extra utilities to $DCTOOLCHAIN/bin so they're in the PATH...$NL" >&2 \
+    && mkdir -p $DCTOOLCHAIN/bin \
+    && ln -s $KOS/utils/bin2c/bin2c $DCTOOLCHAIN/bin/bin2c \
+    && ln -s $KOS/utils/bin2o/bin2o $DCTOOLCHAIN/bin/bin2o \
+    && ln -s $KOS/utils/dcbumpgen/dcbumpgen $DCTOOLCHAIN/bin/dcbumpgen \
+    && ln -s $KOS/utils/genexports/genexports.sh $DCTOOLCHAIN/bin/genexports.sh \
+    && ln -s $KOS/utils/genexports/genexportstubs.sh $DCTOOLCHAIN/bin/genexportstubs.sh \
+    && ln -s $KOS/utils/genromfs/genromfs $DCTOOLCHAIN/bin/genromfs \
+    && ln -s $KOS/utils/ipload/ipload.py $DCTOOLCHAIN/bin/ipload.py \
+    && ln -s $KOS/utils/isotest/isotest $DCTOOLCHAIN/bin/isotest \
+    && ln -s $KOS/utils/kmgenc/kmgenc $DCTOOLCHAIN/bin/kmgenc \
+    && ln -s $KOS/utils/makejitter/makejitter $DCTOOLCHAIN/bin/makejitter \
+    && ln -s $KOS/utils/rdtest/rdtest $DCTOOLCHAIN/bin/rdtest \
+    && ln -s $KOS/utils/scramble/scramble $DCTOOLCHAIN/bin/scramble \
+    && ln -s $KOS/utils/vqenc/vqenc $DCTOOLCHAIN/bin/vqenc \
+    && ln -s $KOS/utils/wav2adpcm/wav2adpcm $DCTOOLCHAIN/bin/wav2adpcm \
+    && printf "Done.\nCleaning extra included utilities...$NL" >&2 \
+    && find $KOS/utils -name "*.o" -delete \
+    && printf "Done.\n" >&2
+RUN \
+    # Build extra external utilities
+    . /tmp/verbose.sh && . $KOS/environ.sh \
+    && printf "Building extra external utilities...$NL" >&2 \
+    && mkdir -p $KOS/utils/makeip \
+    && cd $KOS/utils/makeip \
+    && curl --progress-bar -O http://www.boob.co.uk/files/makeip.tar.gz &> $REDIRECT \
+    && tar -xf makeip.tar.gz &> $REDIRECT \
+    && rm makeip.tar.gz &> $REDIRECT \
+    && gcc makeip.c -o makeip &> $REDIRECT \
+    && cd $KOS/utils \ 
+    && git clone https://github.com/Kazade/img4dc.git &> $REDIRECT \
+    && cd $KOS/utils/img4dc \
+    && cmake . &> $REDIRECT \
+    && make BUMP=9 &> $REDIRECT \
+    && printf "Done.\n" >&2
+RUN \
+    # Prepare files to copy in next stage
+    . /tmp/verbose.sh \
+    && printf "Preparing files to copy to next stage...$NL" >&2 \
+    && mkdir /tmp/copy \
+    && mv $DCTOOLCHAIN/sh-elf $DCTOOLCHAIN/arm-eabi $DCTOOLCHAIN/kos $DCTOOLCHAIN/kos-ports $DCTOOLCHAIN/bin /tmp/copy \
+    && mv /tmp/verbose.sh /root/.bashrc /tmp/copy \
+    && printf "Done.\n" >&2
+
+#
+# Second stage: Final Alpine image with the GCC cross-compiler toolchain, KOS, KOS-PORTS, Addons, Utils, and some other useful stuff
+#
+
+FROM alpine:latest
+LABEL maintainer "Ben Baron <ben@einsteinx2.com>"
+
+# Set build arguments
+ARG VERBOSE
+
+# Set a local environment variable based on the global arg
+ENV DCTOOLCHAIN="/opt/toolchains/dc"
+
+# Copy only the compiled toolchains from the build image to save space
+COPY --from=builder /tmp/copy $DCTOOLCHAIN
+
+# Install tools and create entry script that loads the KOS environment so make commands can be given directly
+RUN \
+    # Move copied files into place
+    . $DCTOOLCHAIN/verbose.sh \
+    && rm -f $DCTOOLCHAIN/verbose.sh \
+    && mv $DCTOOLCHAIN/.bashrc /root/.bashrc \
+\
+    # Install useful tools for building Dreamcast projects
+    && printf "Installing useful tools for building Dreamcast projects...$NL" >&2 \
+    && apk --update add --no-cache \
+       bash bison bzip2 cdrkit cmake colordiff curl flex gawk git linux-headers \
+       musl-dev make patch python sed subversion tar texinfo tree vim wget &> $REDIRECT \
+	&& apk --update add --no-cache libelf-dev --repository=http://dl-cdn.alpinelinux.org/alpine/v3.9/main \
+    && rm -rf /var/cache/apk/* \
+    && printf "Done.\n" >&2 \
+\
+    # Create entry point script to automatically load KOS environment
+    && printf "Create entry point script to automatically load KOS environment...$NL" >&2 \
+    && printf '#!/bin/bash\n. /opt/toolchains/dc/kos/environ.sh\nexec "$@"' > /usr/local/bin/entry.sh \
+    && chmod a+x /usr/local/bin/entry.sh \
+    && printf "Done.\n" >&2
+
+# Default to /src directory
+WORKDIR /src
+
+# Run any command passed in a bash shell with the KOS environment loaded
+ENTRYPOINT ["/usr/local/bin/entry.sh"]
+
+# If no command is passed, run an interactive bash shell
+CMD ["/bin/bash"]
