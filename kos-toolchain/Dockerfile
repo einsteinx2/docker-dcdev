@@ -1,6 +1,6 @@
-#
-# KOS complete toolchain image (einsteinx2/dcdev-kos-toolchain:gcc-9.3)
-# ----------------------------------------------------------------
+# -------------------------------------------------------------
+# KOS Complete Toolchain Image (einsteinx2/dcdev-kos-toolchain)
+# -------------------------------------------------------------
 #
 # This image is meant to be used as a fully featured KOS development environment. It includes both the SH4 and
 # ARM cross-compiler toolchains, the full KallistiOS library, all included utilities and addons, and some extra
@@ -12,13 +12,32 @@
 # project or use any of the included tools without entering the interactive shell. If no command is provided, an
 # interactive bash shell is automatically launched.
 #
-# Example usage with a simple Makefile: `docker run -it --rm -v $PWD:/src einsteinx2/dcdev-kos-toolchain:gcc-9.3 make`
-# Example usage with a build script: `docker run -it --rm -v $PWD:/src einsteinx2/dcdev-kos-toolchain:gcc-9.3 ./dc_build.sh`
-# Example usage with an interactive bash shell: `docker run -it --rm -v $PWD:/src einsteinx2/dcdev-kos-toolchain:gcc-9.3`
-# 
-# Docker image build instructions:
-# Silence output for faster build: `docker build -t einsteinx2/dcdev-kos-toolchain:gcc-9.3 .`
-# Verbose output to help debugging: `docker build --build-arg VERBOSE=true -t einsteinx2/dcdev-kos-toolchain:gcc-9.3 .`
+# Build Commands:
+# ---------------
+# GCC 9 Toolchain: `docker build -t einsteinx2/dcdev-kos-toolchain:gcc-9 .`
+# GCC 4 Toolchain: `docker build --build-arg KOS_GCC_VER=4 -t einsteinx2/dcdev-kos-toolchain:gcc-4 .`
+#
+# Example GCC 9 Usage (run from your project directory):
+# --------------
+# Simple Makefile:   `docker run -it --rm -v $PWD:/src einsteinx2/dcdev-kos-toolchain:gcc-9 make`
+# Build Script:      `docker run -it --rm -v $PWD:/src einsteinx2/dcdev-kos-toolchain:gcc-9 ./dc_build.sh`
+# Interactive Shell: `docker run -it --rm -v $PWD:/src einsteinx2/dcdev-kos-toolchain:gcc-9`
+#
+# Example GCC 4 Usage (run from your project directory):
+# --------------
+# Simple Makefile:   `docker run -it --rm -v $PWD:/src einsteinx2/dcdev-kos-toolchain:gcc-4 make`
+# Build Script:      `docker run -it --rm -v $PWD:/src einsteinx2/dcdev-kos-toolchain:gcc-4 ./dc_build.sh`
+# Interactive Shell: `docker run -it --rm -v $PWD:/src einsteinx2/dcdev-kos-toolchain:gcc-4`
+#
+# Notes
+# -----
+# More specific tags are provided so you can pin your builds to an exact version of this image if needed. For
+# example, you can specify GCC 9.3 by using the einsteinx2/dcdev-kos-toolchain:gcc-9.3 image, or you can specify 
+# a certain GCC 9.3 image by using a version tag like the einsteinx2/dcdev-kos-toolchain:gcc-9.3__v1.0.0 image.
+# This is mostly because while the GCC toolchains don't change very often and are usually compatible as long as
+# you're using the same GCC major version (e.g. 9.2 and 9.3), however the KOS library changes more frequently 
+# and may prevent your project from compiling on a newer version without making some (usually minor) changes.
+
 
 #
 # Global Arguments
@@ -29,9 +48,10 @@
 ARG VERBOSE=false
 
 # For maximum speed, set this to the number of CPU threads you have
+# When THREADS=0, $(getconf _NPROCESSORS_ONLN) will be used to automatically build using the max available threads
 # i.e. if you have a 4 core / 8 thread CPU, choose 8
 # (can be set using `--build-arg THREADS=8` when building)
-ARG THREADS=4
+ARG THREADS=0
 
 # KOS git repository and branch to use
 # NOTE: To use a different repo or branch, for example to use your own fork instead of upstream,
@@ -47,11 +67,16 @@ ARG KOS_BRANCH="master"
 ARG PORTS_REPO="https://github.com/KallistiOS/kos-ports.git"
 ARG PORTS_BRANCH="master"
 
+# Choose GCC major version. Supported values are 9 (SH4 9.3/ARM 8.4), 4 (both 4.7.4) 
+# (can be set using `--build-arg KOS_GCC_VER=4` when building, default is 9)
+# NOTE: You can technically use any available tag number from the `einsteinx2/dcdev-gcc-toolchain` image here
+ARG KOS_GCC_VER=9
+
 #
 # First stage: Pre-built GCC cross-compiler toolchain to build KOS 
 #
 
-FROM einsteinx2/dcdev-gcc-toolchain:gcc-9.3 as toolchain
+FROM einsteinx2/dcdev-gcc-toolchain:gcc-$KOS_GCC_VER as toolchain
 FROM einsteinx2/dcdev-gcc-base:latest as builder
 LABEL maintainer "Ben Baron <ben@einsteinx2.com>"
 
@@ -75,10 +100,25 @@ SHELL ["/bin/bash", "-c"]
 COPY --from=toolchain $DCTOOLCHAIN/sh-elf $DCTOOLCHAIN/sh-elf
 COPY --from=toolchain $DCTOOLCHAIN/arm-eabi $DCTOOLCHAIN/arm-eabi
 
+# Validate THREADS argument and set build variables
+RUN if [ "$THREADS" -eq 0 ] 2>/dev/null; then \
+        # If THREADS is 0, default to max possible threads
+        printf "export DOCKER_THREADS=$(getconf _NPROCESSORS_ONLN)\n" >> /tmp/dockerenv.sh; \
+    elif ! [[ -z "${THREADS//[0-9]}" ]]; then \
+        # If THREADS is a negative number or any non-integer, print an error and exit
+        printf "Invalid THREADS specified, please enter a positive integer value\n"; >&2; \
+        exit 1; \
+    else \
+        # If THREADS is a positive integer, use that value
+        printf "export DOCKER_THREADS=$THREADS\n" >> /tmp/dockerenv.sh; \
+    fi \
+    && . /tmp/dockerenv.sh \
+    && printf "Building using $DOCKER_THREADS threads\n" >&2
+
 # Build KOS and patched GCC cross-compiler toolchain for SH4 (Main CPU) and ARM7DI (AICA Control CPU)
 RUN \
     # Clone repositories
-    . /tmp/verbose.sh \
+    . /tmp/dockerenv.sh \
     && printf "Cloning latest mainline KOS...$NL" >&2 \
     && git clone --single-branch --branch $KOS_BRANCH $KOS_REPO $KOS &> $REDIRECT \
     && printf "Done.\nCloning latest mainline KOS PORTS...$NL" >&2 \
@@ -86,7 +126,7 @@ RUN \
     && printf "Done.\n" >&2
 RUN \
     # Configure environment
-    . /tmp/verbose.sh \
+    . /tmp/dockerenv.sh \
     && printf "Configuring environment...$NL" >&2 \
     && cp $KOS/doc/environ.sh.sample $KOS/environ.sh \
     # NOTE: This is in single quotes on purpose so that ${KOS_BASE} is not evaluated
@@ -96,15 +136,15 @@ RUN \
     && printf "Done.\n" >&2
 RUN \
     # Build KOS
-    . /tmp/verbose.sh && . $KOS/environ.sh \
+    . /tmp/dockerenv.sh && . $KOS/environ.sh \
     && printf "Building KOS...$NL" >&2 \
-    && make -j$THREADS -C $KOS &> $REDIRECT \
+    && make -j$DOCKER_THREADS -C $KOS &> $REDIRECT \
     && printf "Done.\nCleaning KOS...$NL" >&2 \
-    && make -j$THREADS -C $KOS clean &> $REDIRECT \
+    && make -j$DOCKER_THREADS -C $KOS clean &> $REDIRECT \
     && printf "Done.\n" >&2
 RUN \
     # Build KOS Ports
-    . /tmp/verbose.sh && . $KOS/environ.sh \
+    . /tmp/dockerenv.sh && . $KOS/environ.sh \
     && printf "Building KOS Ports...$NL" >&2 \
     && make -C $KOS kos-ports_all &> $REDIRECT \
     && printf "Done.\nCleaning KOS Ports...$NL" >&2 \
@@ -112,18 +152,18 @@ RUN \
     && printf "Done.\n" >&2
 RUN \
     # Build KOS addons
-    . /tmp/verbose.sh && . $KOS/environ.sh \
+    . /tmp/dockerenv.sh && . $KOS/environ.sh \
     && printf "Building KOS addons...$NL" >&2 \
-    && make -j$THREADS -C $KOS/addons &> $REDIRECT \
+    && make -j$DOCKER_THREADS -C $KOS/addons &> $REDIRECT \
     && printf "Done.\nCleaning KOS addons...$NL" >&2 \
     && find $KOS/addons -name "*.o" -delete \
     && printf "Done.\n" >&2
 RUN \
     # Build extra included utilities
-    . /tmp/verbose.sh && . $KOS/environ.sh \
+    . /tmp/dockerenv.sh && . $KOS/environ.sh \
     && printf "Building extra included utilities...$NL" >&2 \
     && sed -i 's/^DIRS.*/DIRS = bin2c bincnv dcbumpgen genromfs isotest kmgenc makejitter rdtest scramble vqenc wav2adpcm/' $KOS/utils/Makefile \
-    && make -j$THREADS -C $KOS/utils &> $REDIRECT \
+    && make -j$DOCKER_THREADS -C $KOS/utils &> $REDIRECT \
     && printf "Done.\nSymlinking extra utilities to $DCTOOLCHAIN/bin so they're in the PATH...$NL" >&2 \
     && mkdir -p $DCTOOLCHAIN/bin \
     && ln -s $KOS/utils/bin2c/bin2c $DCTOOLCHAIN/bin/bin2c \
@@ -145,7 +185,7 @@ RUN \
     && printf "Done.\n" >&2
 RUN \
     # Build extra external utilities
-    . /tmp/verbose.sh && . $KOS/environ.sh \
+    . /tmp/dockerenv.sh && . $KOS/environ.sh \
     && printf "Building extra external utilities...$NL" >&2 \
     && mkdir -p $KOS/utils/makeip \
     && cd $KOS/utils/makeip \
@@ -161,11 +201,11 @@ RUN \
     && printf "Done.\n" >&2
 RUN \
     # Prepare files to copy in next stage
-    . /tmp/verbose.sh \
+    . /tmp/dockerenv.sh \
     && printf "Preparing files to copy to next stage...$NL" >&2 \
     && mkdir /tmp/copy \
     && mv $DCTOOLCHAIN/sh-elf $DCTOOLCHAIN/arm-eabi $DCTOOLCHAIN/kos $DCTOOLCHAIN/kos-ports $DCTOOLCHAIN/bin /tmp/copy \
-    && mv /tmp/verbose.sh /root/.bashrc /tmp/copy \
+    && mv /tmp/dockerenv.sh /root/.bashrc /tmp/copy \
     && printf "Done.\n" >&2
 
 #
@@ -187,8 +227,8 @@ COPY --from=builder /tmp/copy $DCTOOLCHAIN
 # Install tools and create entry script that loads the KOS environment so make commands can be given directly
 RUN \
     # Move copied files into place
-    . $DCTOOLCHAIN/verbose.sh \
-    && rm -f $DCTOOLCHAIN/verbose.sh \
+    . $DCTOOLCHAIN/dockerenv.sh \
+    && rm -f $DCTOOLCHAIN/dockerenv.sh \
     && mv $DCTOOLCHAIN/.bashrc /root/.bashrc \
 \
     # Install useful tools for building Dreamcast projects

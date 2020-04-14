@@ -1,5 +1,5 @@
-#
-# GCC base image (einsteinx2/dcdev-gcc-base:latest)
+# -------------------------------------------------
+# GCC Base Image (einsteinx2/dcdev-gcc-base)
 # -------------------------------------------------
 #
 # This image is meant to be a minimally sized image to be used as a base image to create the GCC cross-compiler 
@@ -7,9 +7,12 @@
 # download all of the dependencies each time when rebuilding images locally (or CI if image caching is available).
 # When cached locally, this saves hundreds of megabytes of package downloads plus install time.
 # 
-# Docker image build instructions: `docker build -t einsteinx2/dcdev-gcc-base:latest .`
+# Build Command:
+# -------------- 
+# `docker build -t einsteinx2/dcdev-gcc-base:latest .`
 
-FROM alpine:latest as builder
+
+FROM alpine:latest
 LABEL maintainer "Ben Baron <ben@einsteinx2.com>"
 
 # Download all necessary dependencies needed to build the KOS GCC cross-compiler toolchain
@@ -24,9 +27,9 @@ RUN \
     # Prepare .bashrc
     && printf ". /etc/profile\n" > ~/.bashrc \
 \
-    # Create verbose output toggle script used in child images
-    && printf 'if $VERBOSE; then\n  export REDIRECT="/dev/stdout";\n  export NL="\\n";\nelse\n  export REDIRECT="/dev/null";\n  export NL="";\nfi\n' > /tmp/verbose.sh \
-    && chmod a+x /tmp/verbose.sh
+    # Create verbose output toggle script used in child images (file can be appended to by child images to store more environment variables)
+    && printf 'if $VERBOSE; then\n  export REDIRECT="/dev/stdout";\n  export NL="\\n";\nelse\n  export REDIRECT="/dev/null";\n  export NL="";\nfi\n' > /tmp/dockerenv.sh \
+    && chmod a+x /tmp/dockerenv.sh
 
 # Default to /src directory
 WORKDIR /src
