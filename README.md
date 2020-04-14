@@ -1,5 +1,4 @@
 # Optimized Dreamcast homebrew development Docker images
----
 
 ## Overview
 This repository contains a set of 3 Dockerfiles that can be used to build a fully self-contianed and optimized Dreamcast development environment to cross-compile Dreamcast homebrew games and applications based on either the [KallistiOS aka KOS](https://github.com/KallistiOS/KallistiOS) framework or "bare metal" if required.
@@ -13,13 +12,13 @@ If you just want a complete ready to go KOS environment, the only image you need
 ## Quick Start
 
 ### Example GCC 9 Usage (run from your project directory):
-**Simple Makefile:**   `docker run -it --rm -v $PWD:/src einsteinx2/dcdev-kos-toolchain:gcc-9 make`
-**Build Script:**      `docker run -it --rm -v $PWD:/src einsteinx2/dcdev-kos-toolchain:gcc-9 ./dc_build.sh`
+**Simple Makefile:**   `docker run -it --rm -v $PWD:/src einsteinx2/dcdev-kos-toolchain:gcc-9 make`<br/>
+**Build Script:**      `docker run -it --rm -v $PWD:/src einsteinx2/dcdev-kos-toolchain:gcc-9 ./dc_build.sh`<br/>
 **Interactive Shell:** `docker run -it --rm -v $PWD:/src einsteinx2/dcdev-kos-toolchain:gcc-9`
 
 ### Example GCC 4 Usage (run from your project directory):
-**Simple Makefile:**   `docker run -it --rm -v $PWD:/src einsteinx2/dcdev-kos-toolchain:gcc-4 make`
-**Build Script:**      `docker run -it --rm -v $PWD:/src einsteinx2/dcdev-kos-toolchain:gcc-4 ./dc_build.sh`
+**Simple Makefile:**   `docker run -it --rm -v $PWD:/src einsteinx2/dcdev-kos-toolchain:gcc-4 make`<br/>
+**Build Script:**      `docker run -it --rm -v $PWD:/src einsteinx2/dcdev-kos-toolchain:gcc-4 ./dc_build.sh`<br/>
 **Interactive Shell:** `docker run -it --rm -v $PWD:/src einsteinx2/dcdev-kos-toolchain:gcc-4`
 
 These will mount the current folder to `/src` in the container and run whatever command is passed inside a bash shell with all KOS environment variables already set. When passing no command, an interactive bash shell with all KOS variables set is provided if preferred.
@@ -53,27 +52,27 @@ However, it does not include the standard x86_64 GCC tools as they are not requi
 `docker build -f gcc-base/Dockerfile -t einsteinx2/dcdev-gcc-base:latest .`
 
 ### einsteinx2/dcdev-gcc-toolchain
-**GCC 9 Toolchain:** `docker build -f gcc-toolchain/Dockerfile -t einsteinx2/dcdev-gcc-toolchain:gcc-9 .`
-**GCC 4 Toolchain:** `docker build --build-arg KOS_GCC_VER=4 -f gcc-toolchain/Dockerfile -t einsteinx2/dcdev-gcc-toolchain:gcc-4 .`
+**GCC 9:** `docker build -f gcc-toolchain/Dockerfile -t einsteinx2/dcdev-gcc-toolchain:gcc-9 .`<br/>
+**GCC 4:** `docker build --build-arg KOS_GCC_VER=4 -f gcc-toolchain/Dockerfile -t einsteinx2/dcdev-gcc-toolchain:gcc-4 .`
 
 ### einsteinx2/dcdev-kos-toolchain
-**GCC 9 Toolchain:** `docker build -f kos-toolchain/Dockerfile -t einsteinx2/dcdev-kos-toolchain:gcc-9 .`
-**GCC 4 Toolchain:** `docker build --build-arg KOS_GCC_VER=4 -f kos-toolchain/Dockerfile -t einsteinx2/dcdev-kos-toolchain:gcc-4 .`
+**GCC 9:** `docker build -f kos-toolchain/Dockerfile -t einsteinx2/dcdev-kos-toolchain:gcc-9 .`<br/>
+**GCC 4:** `docker build --build-arg KOS_GCC_VER=4 -f kos-toolchain/Dockerfile -t einsteinx2/dcdev-kos-toolchain:gcc-4 .`
 
 ### Additional Build Arguments (only for `gcc-base` and `kos-base`)
 There are also a variety of other build arguments you can use when building these images. To see the full details, refer to the comments at the top of each Dockerfile, but here are some of the most useful ones.
 
 #### ARG VERBOSE=false
-Defaults to verbose output off as it should build faster without all of the console printing and is easier to follow the build progress.
+Defaults to verbose output off as it should build faster without all of the console printing and is easier to follow the build progress.<br/>
 To debug build problems, add the flag `--build-arg VERBOSE=true` when building the image to have it print all output from each download and compilation step.
 
 ### ARG THREADS=0
-For maximum speed, set this to the number of CPU threads you have.
+For maximum speed, set this to the number of CPU threads you have.<br/>
 When THREADS=0, `$(getconf _NPROCESSORS_ONLN)` will be used to automatically build using the max available threads
 i.e. if you have a 4 core / 8 thread CPU, choose 8 (can be set using `--build-arg THREADS=8` when building)
 
 ### ARG KOS_GCC_VER=9
-Choose GCC major version. Supported values are 9 (SH4 9.3/ARM 8.4), 4 (both 4.7.4).
+Choose GCC major version. Supported values are 9 (SH4 9.3/ARM 8.4), 4 (both 4.7.4).<br/>
 Can be set using `--build-arg KOS_GCC_VER=4` when building, default is 9.
 
 ### ARG KOS\_REPO, KOS\_BRANCH, PORTS\_REPO, PORTS\_BRANCH
