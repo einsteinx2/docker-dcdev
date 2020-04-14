@@ -43,14 +43,14 @@
 # Global Arguments
 #
 
-# Default to verbose output off as it should build faster without all of the console printing
-# NOTE: To debug build problems add the flag `--build-arg VERBOSE=true` when building the image
+# Defaults to verbose output off as it should build faster without all of the console printing.
+# To debug build problems, add the flag `--build-arg VERBOSE=true` when building the image to 
+# have it print all output from each download and compilation step.
 ARG VERBOSE=false
 
 # For maximum speed, set this to the number of CPU threads you have
-# When THREADS=0, $(getconf _NPROCESSORS_ONLN) will be used to automatically build using the max available threads
-# i.e. if you have a 4 core / 8 thread CPU, choose 8
-# (can be set using `--build-arg THREADS=8` when building)
+# When THREADS=0, `$(getconf _NPROCESSORS_ONLN)` will be used to automatically build using the max available threads
+# i.e. if you have a 4 core / 8 thread CPU, choose 8 (can be set using `--build-arg THREADS=8` when building)
 ARG THREADS=0
 
 # KOS git repository and branch to use
@@ -67,8 +67,8 @@ ARG KOS_BRANCH="master"
 ARG PORTS_REPO="https://github.com/KallistiOS/kos-ports.git"
 ARG PORTS_BRANCH="master"
 
-# Choose GCC major version. Supported values are 9 (SH4 9.3/ARM 8.4), 4 (both 4.7.4) 
-# (can be set using `--build-arg KOS_GCC_VER=4` when building, default is 9)
+# Choose GCC major version. Supported values are 9 (SH4 9.3/ARM 8.4), 4 (both 4.7.4)
+# Can be set using `--build-arg KOS_GCC_VER=4` when building, default is 9)
 # NOTE: You can technically use any available tag number from the `einsteinx2/dcdev-gcc-toolchain` image here
 ARG KOS_GCC_VER=9
 
@@ -193,11 +193,14 @@ RUN \
     && tar -xf makeip.tar.gz &> $REDIRECT \
     && rm makeip.tar.gz &> $REDIRECT \
     && gcc makeip.c -o makeip &> $REDIRECT \
+    && ln -s $KOS/utils/makeip/makeip $DCTOOLCHAIN/bin/makeip \
     && cd $KOS/utils \ 
     && git clone https://github.com/Kazade/img4dc.git &> $REDIRECT \
     && cd $KOS/utils/img4dc \
     && cmake . &> $REDIRECT \
     && make BUMP=9 &> $REDIRECT \
+    && ln -s $KOS/utils/img4dc/cdi4dc/cdi4dc $DCTOOLCHAIN/bin/cdi4dc \
+    && ln -s $KOS/utils/img4dc/mds4dc/mds4dc $DCTOOLCHAIN/bin/mds4dc \
     && printf "Done.\n" >&2
 RUN \
     # Prepare files to copy in next stage

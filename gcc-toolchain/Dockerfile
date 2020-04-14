@@ -15,14 +15,14 @@
 # Global Arguments
 #
 
-# Default to verbose output off as it should build faster without all of the console printing
-# NOTE: To debug build problems add the flag `--build-arg VERBOSE=true` when building the image
+# Defaults to verbose output off as it should build faster without all of the console printing.
+# To debug build problems, add the flag `--build-arg VERBOSE=true` when building the image to 
+# have it print all output from each download and compilation step.
 ARG VERBOSE=false
 
 # For maximum speed, set this to the number of CPU threads you have
-# When THREADS=0, $(getconf _NPROCESSORS_ONLN) will be used to automatically build using the max available threads
-# i.e. if you have a 4 core / 8 thread CPU, choose 8
-# (can be set using `--build-arg THREADS=8` when building)
+# When THREADS=0, `$(getconf _NPROCESSORS_ONLN)` will be used to automatically build using the max available threads
+# i.e. if you have a 4 core / 8 thread CPU, choose 8 (can be set using `--build-arg THREADS=8` when building)
 ARG THREADS=0
 
 # KOS git repository and branch to use
@@ -39,8 +39,8 @@ ARG KOS_BRANCH="master"
 FROM einsteinx2/dcdev-gcc-base:latest as builder
 LABEL maintainer "Ben Baron <ben@einsteinx2.com>"
 
-# Choose GCC major version. Supported values are 9 (SH4 9.3/ARM 8.4), 4 (both 4.7.4) 
-# (can be set using `--build-arg KOS_GCC_VER=4` when building, default is 9)
+# Choose GCC major version. Supported values are 9 (SH4 9.3/ARM 8.4), 4 (both 4.7.4)
+# Can be set using `--build-arg KOS_GCC_VER=4` when building, default is 9)
 ARG KOS_GCC_VER=9
 
 # Set build arguments
