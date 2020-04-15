@@ -59,7 +59,7 @@ However, it does not include the standard x86_64 GCC tools as they are not requi
 **GCC 9:** `docker build -f kos-toolchain/Dockerfile -t einsteinx2/dcdev-kos-toolchain:gcc-9 .`<br/>
 **GCC 4:** `docker build --build-arg KOS_GCC_VER=4 -f kos-toolchain/Dockerfile -t einsteinx2/dcdev-kos-toolchain:gcc-4 .`
 
-### Additional Build Arguments (only for `gcc-base` and `kos-base`)
+### Additional Build Arguments (only for `gcc-toolchain` and `kos-toolchain`)
 There are also a variety of other build arguments you can use when building these images. To see the full details, refer to the comments at the top of each Dockerfile, but here are some of the most useful ones.
 
 #### ARG VERBOSE=false
