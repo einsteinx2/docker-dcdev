@@ -23,7 +23,7 @@ If you just want a complete ready to go KOS environment, the only image you need
 
 These will mount the current folder to `/src` in the container and run whatever command is passed inside a bash shell with all KOS environment variables already set. When passing no command, an interactive bash shell with all KOS variables set is provided if preferred.
 
-You may execute other commands, of course. There are various utilities included in the image in the `/opt/toolchains/dc/bin` directory that is in the `$PATH` that can do various things like create a 1ST_READ.BIN file, scramble/unscramble, convert audio and video files to the Dreamcast's format, etc. These commands can be run by simply appending the command to the end of the `docker run` command of the image you want to use.
+You may execute other commands, of course. There are various utilities included in the image in the `/opt/toolchains/dc/bin` directory that is in the `$PATH` that can do various things like create a IP.BIN file, scramble/unscramble, convert audio and video files to the Dreamcast's format, etc. These commands can be run by simply appending the command to the end of the `docker run` command of the image you want to use.
 
 Note: These image probably will not compile Dreamshell as that requires a specially patched KOS install. Eventually I'll create images based on these that include the Dreamshell patches.
 
