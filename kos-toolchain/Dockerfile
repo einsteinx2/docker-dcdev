@@ -201,6 +201,10 @@ RUN \
     && make BUMP=9 &> $REDIRECT \
     && ln -s $KOS/utils/img4dc/cdi4dc/cdi4dc $DCTOOLCHAIN/bin/cdi4dc \
     && ln -s $KOS/utils/img4dc/mds4dc/mds4dc $DCTOOLCHAIN/bin/mds4dc \
+    && cd $KOS/utils \ 
+    && git clone https://github.com/sizious/dcload-ip.git &> $REDIRECT \
+    && cd $KOS/utils/dcload-ip \
+    && make install \
     && printf "Done.\n" >&2
 RUN \
     # Prepare files to copy in next stage
