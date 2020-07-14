@@ -238,7 +238,7 @@ RUN \
     && printf "Installing useful tools for building Dreamcast projects...$NL" >&2 \
     && apk --update add --no-cache \
        bash bison bzip2 cdrkit cmake colordiff curl flex gawk git linux-headers \
-       musl-dev make patch python sed subversion tar texinfo tree vim wget &> $REDIRECT \
+       musl-dev make patch python2 sed subversion tar texinfo tree vim wget &> $REDIRECT \
 	&& apk --update add --no-cache libelf-dev --repository=http://dl-cdn.alpinelinux.org/alpine/v3.9/main \
     && rm -rf /var/cache/apk/* \
     && printf "Done.\n" >&2 \
