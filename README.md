@@ -3,7 +3,7 @@
 ## Overview
 This repository contains a set of 3 Dockerfiles that can be used to build a fully self-contianed and optimized Dreamcast development environment to cross-compile Dreamcast homebrew games and applications based on either the [KallistiOS aka KOS](https://github.com/KallistiOS/KallistiOS) framework or "bare metal" if required.
 
-All images are based on Alpine linux  and they are split into 3 images for image size and build time optimization: `gcc-base`, `gcc-toolchain`, and `kos-toolchain`. 
+All images are based on Alpine linux  and they are split into 3 images for size and build time optimization: `gcc-base`, `gcc-toolchain`, and `kos-toolchain`. 
 
 If you only need the SH4 and ARM cross-compilers to use for "bare metal" programming or as a base for your own KOS images, then the only image you need is `einsteinx2/dcdev-gcc-toolchain`. 
 
@@ -35,7 +35,7 @@ All images are optimized using multi-stage builds to keep the final image size a
 A stock Alpine Linux image that contains a regular x86_64 GCC compiler toolchain and all necessary tools like make, sed, git, etc that are required to compile the SH4 and ARM cross-compilers as well as the KOS framework.
 
 ### einsteinx2/dcdev-gcc-toolchain
-A stock Alpine Linux image that contains only the SH4 and ARM cross-compiler binaries based on various versions of GCC depending on the image tag, including the SH4 GDB debugger binary, but nothing else. It can be used to directly compile SH4 and ARM code for the Dreamcast that is not based on the KOS framework, such as projects coding "bare metal" using something like [DreamHAL](https://github.com/Moopthehedgehog/DreamHAL).
+A stock Alpine Linux image that contains only the SH4 and ARM cross-compiler binaries based on various versions of GCC depending on the image tag, including the SH4 GDB debugger binary, but nothing else. It can be used to directly compile SH4 and ARM code for the Dreamcast that is not based on the KOS framework, such as projects coding "bare metal" using something like [DreamHAL](https://github.com/sega-dreamcast/dreamhal).
 
 ### einsteinx2/dcdev-kos-toolchain
 A stock Alpine Linux image that contains the SH4 and ARM cross-compiler binaries based on various versions of GCC depending on the image tag, the full KOS framework binaries and source code, all KOS-PORTS libraries for things like mp3, ogg, opus, png, jpeg, and SDL 1.2 support, all KOS included utilities and addons, and some external utilities.
