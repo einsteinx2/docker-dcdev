@@ -46,6 +46,8 @@
 # Defaults to verbose output off as it should build faster without all of the console printing.
 # To debug build problems, add the flag `--build-arg VERBOSE=true` when building the image to 
 # have it print all output from each download and compilation step.
+# NOTE: If you are using the latest Docker versions with buildx, you'll also need to increase
+#       the log limit (https://github.com/docker/buildx/issues/484) and add the flag `--progress=plain`
 ARG VERBOSE=false
 
 # For maximum speed, set this to the number of CPU threads you have

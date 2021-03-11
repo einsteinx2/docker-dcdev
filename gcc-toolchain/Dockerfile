@@ -18,7 +18,9 @@
 # Defaults to verbose output off as it should build faster without all of the console printing.
 # To debug build problems, add the flag `--build-arg VERBOSE=true` when building the image to 
 # have it print all output from each download and compilation step.
-ARG VERBOSE=false
+# NOTE: If you are using the latest Docker versions with buildx, you'll also need to increase
+#       the log limit (https://github.com/docker/buildx/issues/484) and add the flag `--progress=plain`
+ARG VERBOSE=true
 
 # For maximum speed, set this to the number of CPU threads you have
 # When THREADS=0, `$(getconf _NPROCESSORS_ONLN)` will be used to automatically build using the max available threads
@@ -53,27 +55,50 @@ ARG KOS_BRANCH
 ENV DCTOOLCHAIN="/opt/toolchains/dc"
 ENV KOS="$DCTOOLCHAIN/kos"
 ENV DC_CHAIN="$KOS/utils/dc-chain"
+ENV DC_CHAIN_CONFIG_MK="$KOS/utils/dc-chain/config.mk"
 
 # Use the bash shell instead of sh for the build process 
 SHELL ["/bin/bash", "-c"]
 
 # Validate KOS_GCC_VER argument and set build variables
 RUN if [ "$KOS_GCC_VER" -eq 9 ]; then \
+        # Versions for SH4 toolchain
+        printf "export DOCKER_SH4_BINUTILS_VER=2.34\n" >> /tmp/dockerenv.sh; \
         printf "export DOCKER_SH4_GCC_VER=9.3.0\n" >> /tmp/dockerenv.sh; \
+        printf "export DOCKER_SH4_NEWLIB_VER=3.3.0\n" >> /tmp/dockerenv.sh; \
+        printf "export DOCKER_SH4_GDB_VER=9.2\n" >> /tmp/dockerenv.sh; \
+        printf "export DOCKER_SH4_INSIGHT_VER=6.8-1\n" >> /tmp/dockerenv.sh; \
+        # Tarball extensions for SH4 toolchain
+        printf "export DOCKER_SH4_BINUTILS_EXT=xz\n" >> /tmp/dockerenv.sh; \
+        printf "export DOCKER_SH4_GCC_EXT=xz\n" >> /tmp/dockerenv.sh; \
+        printf "export DOCKER_SH4_NEWLIB_EXT=gz\n" >> /tmp/dockerenv.sh; \
+        printf "export DOCKER_SH4_GDB_EXT=xz\n" >> /tmp/dockerenv.sh; \
+        printf "export DOCKER_SH4_INSIGHT_EXT=bz2\n" >> /tmp/dockerenv.sh; \
+        # Versions for ARM toolchain
+        printf "export DOCKER_ARM_BINUTILS_VER=2.34\n" >> /tmp/dockerenv.sh; \
         printf "export DOCKER_ARM_GCC_VER=8.4.0\n" >> /tmp/dockerenv.sh; \
-        printf "export DOCKER_BINUTILS_VER=2.34\n" >> /tmp/dockerenv.sh; \
-        printf "export DOCKER_NEWLIB_VER=3.3.0\n" >> /tmp/dockerenv.sh; \
-        printf "export DOCKER_GMP_VER=6.1.0\n" >> /tmp/dockerenv.sh; \
-        printf "export DOCKER_MPFR_VER=3.1.4\n" >> /tmp/dockerenv.sh; \
-        printf "export DOCKER_MPC_VER=1.0.3\n" >> /tmp/dockerenv.sh; \
+        # Tarball extensions for ARM toolchain
+        printf "export DOCKER_ARM_BINUTILS_EXT=xz\n" >> /tmp/dockerenv.sh; \
+        printf "export DOCKER_ARM_GCC_EXT=xz\n" >> /tmp/dockerenv.sh; \
     elif [ "$KOS_GCC_VER" -eq 4 ]; then \
+        # Versions for SH4 toolchain
+        printf "export DOCKER_SH4_BINUTILS_VER=2.34\n" >> /tmp/dockerenv.sh; \
         printf "export DOCKER_SH4_GCC_VER=4.7.4\n" >> /tmp/dockerenv.sh; \
+        printf "export DOCKER_SH4_NEWLIB_VER=2.0.0\n" >> /tmp/dockerenv.sh; \
+        printf "export DOCKER_SH4_GDB_VER=9.2\n" >> /tmp/dockerenv.sh; \
+        printf "export DOCKER_SH4_INSIGHT_VER=6.8-1\n" >> /tmp/dockerenv.sh; \
+        # Tarball extensions for SH4 toolchain
+        printf "export DOCKER_SH4_BINUTILS_EXT=xz\n" >> /tmp/dockerenv.sh; \
+        printf "export DOCKER_SH4_GCC_EXT=bz2\n" >> /tmp/dockerenv.sh; \
+        printf "export DOCKER_SH4_NEWLIB_EXT=gz\n" >> /tmp/dockerenv.sh; \
+        printf "export DOCKER_SH4_GDB_EXT=xz\n" >> /tmp/dockerenv.sh; \
+        printf "export DOCKER_SH4_INSIGHT_EXT=bz2\n" >> /tmp/dockerenv.sh; \
+        # Versions for ARM toolchain
+        printf "export DOCKER_ARM_BINUTILS_VER=2.34\n" >> /tmp/dockerenv.sh; \
         printf "export DOCKER_ARM_GCC_VER=4.7.4\n" >> /tmp/dockerenv.sh; \
-        printf "export DOCKER_BINUTILS_VER=2.31.1\n" >> /tmp/dockerenv.sh; \
-        printf "export DOCKER_NEWLIB_VER=2.0.0\n" >> /tmp/dockerenv.sh; \
-        printf "export DOCKER_GMP_VER=4.3.2\n" >> /tmp/dockerenv.sh; \
-        printf "export DOCKER_MPFR_VER=2.4.2\n" >> /tmp/dockerenv.sh; \
-        printf "export DOCKER_MPC_VER=0.8.1\n" >> /tmp/dockerenv.sh; \
+        # Tarball extensions for ARM toolchain
+        printf "export DOCKER_ARM_BINUTILS_EXT=xz\n" >> /tmp/dockerenv.sh; \
+        printf "export DOCKER_ARM_GCC_EXT=bz2\n" >> /tmp/dockerenv.sh; \
     else \
         printf "Invalid KOS_GCC_VER specified, supported values are 9 (SH4 9.3/ARM 8.4) and 4 (both 4.7.4)." >&2; \
         exit 1; \
@@ -105,33 +130,41 @@ RUN \
     && git clone --single-branch --branch $KOS_BRANCH $KOS_REPO $KOS &> $REDIRECT \
     && printf "Done.\n" >&2
 RUN \
-    # Patch the dc-chain Makefile to set job threads and remove Obj-C support 
+    # Patch the dc-chain config.mk file to set job threads and remove Obj-C support 
     . /tmp/dockerenv.sh \
-    && printf "Patching dc-chain Makefile...$NL" >&2 \
-    && sed -i "/^makejobs/c\makejobs=-j$DOCKER_THREADS" $DC_CHAIN/Makefile \
-    && sed -i "/^pass2_languages/c\pass2_languages=c,c++" $DC_CHAIN/Makefile \
+    && printf "Copying sample dc-chain config.mk file...$NL" >&2 \
+    && cp $DC_CHAIN/config.mk.stable.sample $DC_CHAIN_CONFIG_MK \
+    && printf "Patching dc-chain config.mk file to set threads and languages...$NL" >&2 \
+    && sed -i "/^makejobs/c\makejobs=-j$DOCKER_THREADS" $DC_CHAIN_CONFIG_MK \
+    && sed -i "/^pass2_languages/c\pass2_languages=c,c++" $DC_CHAIN_CONFIG_MK \
     && printf "Done.\n" >&2
 RUN \
-    # Patch dc-chain Makefile and scripts to set GCC versions
+    # Patch dc-chain config.mk file to set GCC versions
     . /tmp/dockerenv.sh \
-    && printf "Patch dc-chain Makefile and scripts to set GCC versions...$NL" >&2 \
-    # Patch Makefile
-    && sed -i "/^sh_gcc_ver/c\sh_gcc_ver=$DOCKER_SH4_GCC_VER" $DC_CHAIN/Makefile \
-    && sed -i "/^arm_gcc_ver/c\arm_gcc_ver=$DOCKER_ARM_GCC_VER" $DC_CHAIN/Makefile \
-    && sed -i "/^sh_binutils_ver/c\sh_binutils_ver=$DOCKER_BINUTILS_VER" $DC_CHAIN/Makefile \
-    && sed -i "/^arm_binutils_ver/c\arm_binutils_ver=$DOCKER_BINUTILS_VER" $DC_CHAIN/Makefile \
-    && sed -i "/^newlib_ver/c\newlib_ver=$DOCKER_NEWLIB_VER" $DC_CHAIN/Makefile \
-    # Patch scripts
-    && scripts=( download.sh unpack.sh cleanup.sh ) \
-    && for script in "${scripts[@]}"; do \
-         sed -i "/^export SH_GCC_VER/c\export SH_GCC_VER=$DOCKER_SH4_GCC_VER" $DC_CHAIN/$script; \
-         sed -i "/^export ARM_GCC_VER/c\export ARM_GCC_VER=$DOCKER_ARM_GCC_VER" $DC_CHAIN/$script; \
-         sed -i "/^export BINUTILS_VER/c\export BINUTILS_VER=$DOCKER_BINUTILS_VER" $DC_CHAIN/$script; \
-         sed -i "/^export NEWLIB_VER/c\export NEWLIB_VER=$DOCKER_NEWLIB_VER" $DC_CHAIN/$script; \
-         sed -i "/^export GMP_VER/c\export GMP_VER=$DOCKER_GMP_VER" $DC_CHAIN/$script; \
-         sed -i "/^export MPFR_VER/c\export MPFR_VER=$DOCKER_MPFR_VER" $DC_CHAIN/$script; \
-         sed -i "/^export MPC_VER/c\export MPC_VER=$DOCKER_MPC_VER" $DC_CHAIN/$script; \
-       done
+    && printf "Patching dc-chain config.mk file to set GCC versions...$NL" >&2 \
+    \
+    && printf "Patching SH4 toolchain versions$NL" >&2 \
+    && sed -i "/^sh_binutils_ver/c\sh_binutils_ver=$DOCKER_SH4_BINUTILS_VER" $DC_CHAIN_CONFIG_MK \
+    && sed -i "/^sh_gcc_ver/c\sh_gcc_ver=$DOCKER_SH4_GCC_VER" $DC_CHAIN_CONFIG_MK \
+    && sed -i "/^newlib_ver/c\newlib_ver=$DOCKER_SH4_NEWLIB_VER" $DC_CHAIN_CONFIG_MK \
+    && sed -i "/^gdb_ver/c\gdb_ver=$DOCKER_SH4_GDB_VER" $DC_CHAIN_CONFIG_MK \
+    && sed -i "/^insight_ver/c\insight_ver=$DOCKER_SH4_INSIGHT_VER" $DC_CHAIN_CONFIG_MK \
+    \
+    && printf "Patching SH4 toolchain extensions$NL" >&2 \
+    && sed -i "/^sh_binutils_tarball_type/c\sh_binutils_tarball_type=$DOCKER_SH4_BINUTILS_EXT" $DC_CHAIN_CONFIG_MK \
+    && sed -i "/^sh_gcc_tarball_type/c\sh_gcc_tarball_type=$DOCKER_SH4_GCC_EXT" $DC_CHAIN_CONFIG_MK \
+    && sed -i "/^newlib_tarball_type/c\newlib_tarball_type=$DOCKER_SH4_NEWLIB_EXT" $DC_CHAIN_CONFIG_MK \
+    && sed -i "/^gdb_tarball_type/c\gdb_tarball_type=$DOCKER_SH4_GDB_EXT" $DC_CHAIN_CONFIG_MK \
+    && sed -i "/^insight_tarball_type/c\insight_tarball_type=$DOCKER_SH4_INSIGHT_EXT" $DC_CHAIN_CONFIG_MK \
+    \
+    && printf "Patching ARM toolchain versions$NL" >&2 \
+    && sed -i "/^arm_binutils_ver/c\arm_binutils_ver=$DOCKER_ARM_BINUTILS_VER" $DC_CHAIN_CONFIG_MK \
+    && sed -i "/^arm_gcc_ver/c\arm_gcc_ver=$DOCKER_ARM_GCC_VER" $DC_CHAIN_CONFIG_MK \
+    \
+    && printf "Patching SH4 toolchain extensions$NL" >&2 \
+    && sed -i "/^arm_binutils_tarball_type/c\arm_binutils_tarball_type=$DOCKER_ARM_BINUTILS_EXT" $DC_CHAIN_CONFIG_MK \
+    && sed -i "/^arm_gcc_tarball_type/c\arm_gcc_tarball_type=$DOCKER_ARM_GCC_EXT" $DC_CHAIN_CONFIG_MK \
+    && printf "Done.\n" >&2
 RUN \
     # Download and unpack compiler toolchain
     . /tmp/dockerenv.sh \
