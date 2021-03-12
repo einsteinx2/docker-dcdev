@@ -12,17 +12,17 @@
 # `docker build -t einsteinx2/dcdev-gcc-base:latest .`
 
 
-FROM alpine:latest
+FROM --platform=$TARGETPLATFORM alpine:latest
 LABEL maintainer "Ben Baron <ben@einsteinx2.com>"
 
 # Download all necessary dependencies needed to build the KOS GCC cross-compiler toolchain
 RUN \
     # Install dependencies
-    printf "Installing dependencies...\n" >&2 \
-    && apk --update add --no-cache bash build-base cmake curl git libjpeg-turbo-dev libpng-dev linux-headers musl-dev patch python2 subversion texinfo tree wget \
+    printf "Installing dependencies...\n" \
+    && apk --update add --no-cache bash build-base cmake coreutils curl git libjpeg-turbo-dev libpng-dev linux-headers musl-dev patch python2 subversion texinfo tree wget \
 	&& apk --update add --no-cache libelf-dev --repository=http://dl-cdn.alpinelinux.org/alpine/v3.9/main \
 	&& rm -rf /var/cache/apk/* \
-    && printf "Done.\n" >&2 \
+    && printf "Done.\n" \
 \
     # Prepare .bashrc
     && printf ". /etc/profile\n" > ~/.bashrc \
