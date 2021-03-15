@@ -47,7 +47,8 @@
 # To debug build problems, add the flag `--build-arg VERBOSE=true` when building the image to 
 # have it print all output from each download and compilation step.
 # NOTE: If you are using the latest Docker versions with buildx, you'll also need to increase
-#       the log limit (https://github.com/docker/buildx/issues/484) and add the flag `--progress=plain`
+#       the log limit (https://github.com/docker/buildx/issues/484) and add optionally include 
+#       the flag `--progress=plain` if you want to see the full output.
 ARG VERBOSE=false
 
 # For maximum speed, set this to the number of CPU threads you have
@@ -108,65 +109,65 @@ RUN if [ "$THREADS" -eq 0 ] 2>/dev/null; then \
         printf "export DOCKER_THREADS=$(getconf _NPROCESSORS_ONLN)\n" >> /tmp/dockerenv.sh; \
     elif ! [[ -z "${THREADS//[0-9]}" ]]; then \
         # If THREADS is a negative number or any non-integer, print an error and exit
-        printf "Invalid THREADS specified, please enter a positive integer value\n"; >&2; \
+        printf "Invalid THREADS specified, please enter a positive integer value\n"; \
         exit 1; \
     else \
         # If THREADS is a positive integer, use that value
         printf "export DOCKER_THREADS=$THREADS\n" >> /tmp/dockerenv.sh; \
     fi \
     && . /tmp/dockerenv.sh \
-    && printf "Building using $DOCKER_THREADS threads\n" >&2
+    && printf "Building using $DOCKER_THREADS threads\n"
 
 # Build KOS and patched GCC cross-compiler toolchain for SH4 (Main CPU) and ARM7DI (AICA Control CPU)
 RUN \
     # Clone repositories
     . /tmp/dockerenv.sh \
-    && printf "Cloning latest mainline KOS...$NL" >&2 \
+    && printf "Cloning latest mainline KOS...$NL" \
     && git clone --single-branch --branch $KOS_BRANCH $KOS_REPO $KOS &> $REDIRECT \
-    && printf "Done.\nCloning latest mainline KOS PORTS...$NL" >&2 \
+    && printf "Done.\nCloning latest mainline KOS PORTS...$NL" \
     && git clone --single-branch --branch $PORTS_BRANCH $PORTS_REPO $PORTS &> $REDIRECT \
-    && printf "Done.\n" >&2
+    && printf "Done.\n"
 RUN \
     # Configure environment
     . /tmp/dockerenv.sh \
-    && printf "Configuring environment...$NL" >&2 \
+    && printf "Configuring environment...$NL" \
     && cp $KOS/doc/environ.sh.sample $KOS/environ.sh \
     # NOTE: This is in single quotes on purpose so that ${KOS_BASE} is not evaluated
     && printf '. ${KOS_BASE}/environ_dreamcast.sh' >> $KOS/environ.sh \
     # NOTE: This is in double quotes on purpose so that $KOS is evaluated
     && printf ". /etc/profile\n. $KOS/environ.sh\n" > /root/.bashrc \
-    && printf "Done.\n" >&2
+    && printf "Done.\n"
 RUN \
     # Build KOS
     . /tmp/dockerenv.sh && . $KOS/environ.sh \
-    && printf "Building KOS...$NL" >&2 \
+    && printf "Building KOS...$NL" \
     && make -j$DOCKER_THREADS -C $KOS &> $REDIRECT \
-    && printf "Done.\nCleaning KOS...$NL" >&2 \
+    && printf "Done.\nCleaning KOS...$NL" \
     && make -j$DOCKER_THREADS -C $KOS clean &> $REDIRECT \
-    && printf "Done.\n" >&2
+    && printf "Done.\n"
 RUN \
     # Build KOS Ports
     . /tmp/dockerenv.sh && . $KOS/environ.sh \
-    && printf "Building KOS Ports...$NL" >&2 \
+    && printf "Building KOS Ports...$NL" \
     && make -C $KOS kos-ports_all &> $REDIRECT \
-    && printf "Done.\nCleaning KOS Ports...$NL" >&2 \
+    && printf "Done.\nCleaning KOS Ports...$NL" \
     && make -C $KOS kos-ports_clean &> $REDIRECT \
-    && printf "Done.\n" >&2
+    && printf "Done.\n"
 RUN \
     # Build KOS addons
     . /tmp/dockerenv.sh && . $KOS/environ.sh \
-    && printf "Building KOS addons...$NL" >&2 \
+    && printf "Building KOS addons...$NL" \
     && make -j$DOCKER_THREADS -C $KOS/addons &> $REDIRECT \
-    && printf "Done.\nCleaning KOS addons...$NL" >&2 \
+    && printf "Done.\nCleaning KOS addons...$NL" \
     && find $KOS/addons -name "*.o" -delete \
-    && printf "Done.\n" >&2
+    && printf "Done.\n"
 RUN \
     # Build extra included utilities
     . /tmp/dockerenv.sh && . $KOS/environ.sh \
-    && printf "Building extra included utilities...$NL" >&2 \
+    && printf "Building extra included utilities...$NL" \
     && sed -i 's/^DIRS.*/DIRS = bin2c bincnv dcbumpgen genromfs isotest kmgenc makejitter rdtest scramble vqenc wav2adpcm/' $KOS/utils/Makefile \
     && make -j$DOCKER_THREADS -C $KOS/utils &> $REDIRECT \
-    && printf "Done.\nSymlinking extra utilities to $DCTOOLCHAIN/bin so they're in the PATH...$NL" >&2 \
+    && printf "Done.\nSymlinking extra utilities to $DCTOOLCHAIN/bin so they're in the PATH...$NL" \
     && mkdir -p $DCTOOLCHAIN/bin \
     && ln -s $KOS/utils/bin2c/bin2c $DCTOOLCHAIN/bin/bin2c \
     && ln -s $KOS/utils/bin2o/bin2o $DCTOOLCHAIN/bin/bin2o \
@@ -182,13 +183,13 @@ RUN \
     && ln -s $KOS/utils/scramble/scramble $DCTOOLCHAIN/bin/scramble \
     && ln -s $KOS/utils/vqenc/vqenc $DCTOOLCHAIN/bin/vqenc \
     && ln -s $KOS/utils/wav2adpcm/wav2adpcm $DCTOOLCHAIN/bin/wav2adpcm \
-    && printf "Done.\nCleaning extra included utilities...$NL" >&2 \
+    && printf "Done.\nCleaning extra included utilities...$NL" \
     && find $KOS/utils -name "*.o" -delete \
-    && printf "Done.\n" >&2
+    && printf "Done.\n"
 RUN \
     # Build extra external utilities
     . /tmp/dockerenv.sh && . $KOS/environ.sh \
-    && printf "Building extra external utilities...$NL" >&2 \
+    && printf "Building extra external utilities...$NL" \
     && mkdir -p $KOS/utils/makeip \
     && cd $KOS/utils/makeip \
     && curl --progress-bar -O http://www.boob.co.uk/files/makeip.tar.gz &> $REDIRECT \
@@ -197,25 +198,24 @@ RUN \
     && gcc makeip.c -o makeip &> $REDIRECT \
     && ln -s $KOS/utils/makeip/makeip $DCTOOLCHAIN/bin/makeip \
     && cd $KOS/utils \ 
-    && git clone https://github.com/Kazade/img4dc.git &> $REDIRECT \
+    && git clone https://github.com/einsteinx2/img4dc.git &> $REDIRECT \
     && cd $KOS/utils/img4dc \
     && cmake . &> $REDIRECT \
-    && make BUMP=9 &> $REDIRECT \
+    && make cdi4dc &> $REDIRECT \
     && ln -s $KOS/utils/img4dc/cdi4dc/cdi4dc $DCTOOLCHAIN/bin/cdi4dc \
-    && ln -s $KOS/utils/img4dc/mds4dc/mds4dc $DCTOOLCHAIN/bin/mds4dc \
     && cd $KOS/utils \ 
     && git clone https://github.com/sizious/dcload-ip.git &> $REDIRECT \
     && cd $KOS/utils/dcload-ip \
     && make install \
-    && printf "Done.\n" >&2
+    && printf "Done.\n"
 RUN \
     # Prepare files to copy in next stage
     . /tmp/dockerenv.sh \
-    && printf "Preparing files to copy to next stage...$NL" >&2 \
+    && printf "Preparing files to copy to next stage...$NL" \
     && mkdir /tmp/copy \
     && mv $DCTOOLCHAIN/sh-elf $DCTOOLCHAIN/arm-eabi $DCTOOLCHAIN/kos $DCTOOLCHAIN/kos-ports $DCTOOLCHAIN/bin /tmp/copy \
     && mv /tmp/dockerenv.sh /root/.bashrc /tmp/copy \
-    && printf "Done.\n" >&2
+    && printf "Done.\n"
 
 #
 # Second stage: Final Alpine image with the GCC cross-compiler toolchain, KOS, KOS-PORTS, Addons, Utils, and some other useful stuff
@@ -241,19 +241,19 @@ RUN \
     && mv $DCTOOLCHAIN/.bashrc /root/.bashrc \
 \
     # Install useful tools for building Dreamcast projects
-    && printf "Installing useful tools for building Dreamcast projects...$NL" >&2 \
+    && printf "Installing useful tools for building Dreamcast projects...$NL" \
     && apk --update add --no-cache \
-       bash bison bzip2 cdrkit cmake colordiff curl flex gawk git linux-headers \
+       bash bison bzip2 cdrkit cmake colordiff coreutils curl flex gawk git linux-headers \
        musl-dev make patch python2 sed subversion tar texinfo tree vim wget &> $REDIRECT \
 	&& apk --update add --no-cache libelf-dev --repository=http://dl-cdn.alpinelinux.org/alpine/v3.9/main \
     && rm -rf /var/cache/apk/* \
-    && printf "Done.\n" >&2 \
+    && printf "Done.\n" \
 \
     # Create entry point script to automatically load KOS environment
-    && printf "Create entry point script to automatically load KOS environment...$NL" >&2 \
+    && printf "Create entry point script to automatically load KOS environment...$NL" \
     && printf '#!/bin/bash\n. /opt/toolchains/dc/kos/environ.sh\nexec "$@"' > /usr/local/bin/entry.sh \
     && chmod a+x /usr/local/bin/entry.sh \
-    && printf "Done.\n" >&2
+    && printf "Done.\n"
 
 # Default to /src directory
 WORKDIR /src

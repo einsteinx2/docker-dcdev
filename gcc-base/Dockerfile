@@ -12,7 +12,7 @@
 # `docker build -t einsteinx2/dcdev-gcc-base:latest .`
 
 
-FROM --platform=$TARGETPLATFORM alpine:latest
+FROM alpine:latest
 LABEL maintainer "Ben Baron <ben@einsteinx2.com>"
 
 # Download all necessary dependencies needed to build the KOS GCC cross-compiler toolchain
