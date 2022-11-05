@@ -24,6 +24,12 @@ jobs:
       id-token: write
 
     steps:
+      - name: set lower case owner name
+        run: |
+          echo "OWNER_LC=${OWNER,,}" >>${GITHUB_ENV}
+        env:
+          OWNER: '${{ github.repository_owner }}'
+
       - name: Checkout repository
         uses: actions/checkout@v3
 
@@ -69,7 +75,7 @@ jobs:
           context: .
           file: gcc-base/Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ env.REGISTRY }}/${{ github.actor }}/gcc-base:latest
+          tags: ${{ env.REGISTRY }}/${{ OWNER_LC }}/gcc-base:latest
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
