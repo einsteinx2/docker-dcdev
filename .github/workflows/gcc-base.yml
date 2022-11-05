@@ -69,7 +69,7 @@ jobs:
           context: .
           file: gcc-base/Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ github.actor }}/gcc-base:latest
+          tags: ${{ env.REGISTRY }}/${{ github.actor }}/gcc-base:latest
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
