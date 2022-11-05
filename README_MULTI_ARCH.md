@@ -25,12 +25,12 @@ NOTE: The default builder has a very conservative log limit of only 1MB, which i
 `export DCDEV_GCC_BASE_VERSION=2.0.0`
 
 2. Build and push the gcc base image (if it needs updating)
-`docker buildx build --builder dcdev --platform linux/amd64,linux/arm64 --push -t einsteinx2/dcdev-gcc-base:v$DCDEV_GCC_BASE_VERSION ./gcc-base`
+`docker buildx build --builder dcdev --platform linux/amd64,linux/arm64 --push -t octoate/dcdev-gcc-base:v$DCDEV_GCC_BASE_VERSION ./gcc-base`
 
 3. Test the images
 
 4. Update "latest" tag
-`docker buildx imagetools create --tag einsteinx2/dcdev-gcc-base:latest einsteinx2/dcdev-gcc-base:v$DCDEV_GCC_BASE_VERSION`
+`docker buildx imagetools create --tag octoate/dcdev-gcc-base:latest octoate/dcdev-gcc-base:v$DCDEV_GCC_BASE_VERSION`
 
 ## gcc-toolchain (rarely needs update)
 
@@ -38,15 +38,15 @@ NOTE: The default builder has a very conservative log limit of only 1MB, which i
 `export DCDEV_GCC_TOOLCHAIN_VERSION=2.0.0`
 
 2. Build and push the GCC toolchain image (if it needs updating)
-`docker buildx build --builder dcdev --platform linux/amd64,linux/arm64 --build-arg KOS_GCC_VER=4 --build-arg THREADS=8 --build-arg VERBOSE=true --push -t einsteinx2/dcdev-gcc-toolchain:gcc-4__v$DCDEV_GCC_TOOLCHAIN_VERSION ./gcc-toolchain`
-`docker buildx build --builder dcdev --platform linux/amd64,linux/arm64 --build-arg KOS_GCC_VER=9 --build-arg THREADS=8 --build-arg VERBOSE=true --push -t einsteinx2/dcdev-gcc-toolchain:gcc-9__v$DCDEV_GCC_TOOLCHAIN_VERSION ./gcc-toolchain`
+`docker buildx build --builder dcdev --platform linux/amd64,linux/arm64 --build-arg KOS_GCC_VER=4 --build-arg THREADS=8 --build-arg VERBOSE=true --push -t octoate/dcdev-gcc-toolchain:gcc-4__v$DCDEV_GCC_TOOLCHAIN_VERSION ./gcc-toolchain`
+`docker buildx build --builder dcdev --platform linux/amd64,linux/arm64 --build-arg KOS_GCC_VER=9 --build-arg THREADS=8 --build-arg VERBOSE=true --push -t octoate/dcdev-gcc-toolchain:gcc-9__v$DCDEV_GCC_TOOLCHAIN_VERSION ./gcc-toolchain`
 
 3. Test the images
 
 4. Update the GCC major version tags and latest tag (latest points to GCC 9 version)
-`docker buildx imagetools create --tag einsteinx2/dcdev-gcc-toolchain:gcc-4 einsteinx2/dcdev-gcc-toolchain:gcc-4__v$DCDEV_GCC_TOOLCHAIN_VERSION`
-`docker buildx imagetools create --tag einsteinx2/dcdev-gcc-toolchain:gcc-9 einsteinx2/dcdev-gcc-toolchain:gcc-9__v$DCDEV_GCC_TOOLCHAIN_VERSION`
-`docker buildx imagetools create --tag einsteinx2/dcdev-gcc-toolchain:latest einsteinx2/dcdev-gcc-toolchain:gcc-9__v$DCDEV_GCC_TOOLCHAIN_VERSION`
+`docker buildx imagetools create --tag octoate/dcdev-gcc-toolchain:gcc-4 octoate/dcdev-gcc-toolchain:gcc-4__v$DCDEV_GCC_TOOLCHAIN_VERSION`
+`docker buildx imagetools create --tag octoate/dcdev-gcc-toolchain:gcc-9 octoate/dcdev-gcc-toolchain:gcc-9__v$DCDEV_GCC_TOOLCHAIN_VERSION`
+`docker buildx imagetools create --tag octoate/dcdev-gcc-toolchain:latest octoate/dcdev-gcc-toolchain:gcc-9__v$DCDEV_GCC_TOOLCHAIN_VERSION`
 
 
 ## kos-toolchain (should be frequently updated to latest KOS)
@@ -55,12 +55,12 @@ NOTE: The default builder has a very conservative log limit of only 1MB, which i
 `export DCDEV_KOS_TOOLCHAIN_VERSION=2.0.0`
 
 2. Build and push the KOS toolchain image
-`docker buildx build --builder dcdev --platform linux/amd64,linux/arm64 --build-arg KOS_GCC_VER=4 --build-arg THREADS=8 --build-arg VERBOSE=true --push -t einsteinx2/dcdev-kos-toolchain:kos-4__v$DCDEV_KOS_TOOLCHAIN_VERSION ./kos-toolchain`
-`docker buildx build --builder dcdev --platform linux/amd64,linux/arm64 --build-arg KOS_GCC_VER=9 --build-arg THREADS=8 --build-arg VERBOSE=true --push -t einsteinx2/dcdev-kos-toolchain:kos-9__v$DCDEV_KOS_TOOLCHAIN_VERSION ./kos-toolchain`
+`docker buildx build --builder dcdev --platform linux/amd64,linux/arm64 --build-arg KOS_GCC_VER=4 --build-arg THREADS=8 --build-arg VERBOSE=true --push -t octoate/dcdev-kos-toolchain:kos-4__v$DCDEV_KOS_TOOLCHAIN_VERSION ./kos-toolchain`
+`docker buildx build --builder dcdev --platform linux/amd64,linux/arm64 --build-arg KOS_GCC_VER=9 --build-arg THREADS=8 --build-arg VERBOSE=true --push -t octoate/dcdev-kos-toolchain:kos-9__v$DCDEV_KOS_TOOLCHAIN_VERSION ./kos-toolchain`
 
 3. Test the images
 
 4. Update the GCC major version tags and latest tag (latest points to GCC 9 version)
-`docker buildx imagetools create --tag einsteinx2/dcdev-kos-toolchain:gcc-4 einsteinx2/dcdev-kos-toolchain:gcc-4__v$DCDEV_KOS_TOOLCHAIN_VERSION `
-`docker buildx imagetools create --tag einsteinx2/dcdev-kos-toolchain:gcc-9 einsteinx2/dcdev-kos-toolchain:gcc-9__v$DCDEV_KOS_TOOLCHAIN_VERSION `
-`docker buildx imagetools create --tag einsteinx2/dcdev-kos-toolchain:latest einsteinx2/dcdev-kos-toolchain:gcc-9__v$DCDEV_KOS_TOOLCHAIN_VERSION `
+`docker buildx imagetools create --tag octoate/dcdev-kos-toolchain:gcc-4 octoate/dcdev-kos-toolchain:gcc-4__v$DCDEV_KOS_TOOLCHAIN_VERSION `
+`docker buildx imagetools create --tag octoate/dcdev-kos-toolchain:gcc-9 octoate/dcdev-kos-toolchain:gcc-9__v$DCDEV_KOS_TOOLCHAIN_VERSION `
+`docker buildx imagetools create --tag octoate/dcdev-kos-toolchain:latest octoate/dcdev-kos-toolchain:gcc-9__v$DCDEV_KOS_TOOLCHAIN_VERSION `

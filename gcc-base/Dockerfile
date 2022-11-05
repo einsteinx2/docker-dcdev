@@ -1,5 +1,5 @@
 # -------------------------------------------------
-# GCC Base Image (einsteinx2/dcdev-gcc-base)
+# GCC Base Image (octoate/dcdev-gcc-base)
 # -------------------------------------------------
 #
 # This image is meant to be a minimally sized image to be used as a base image to create the GCC cross-compiler 
@@ -9,18 +9,18 @@
 # 
 # Build Command:
 # -------------- 
-# `docker build -t einsteinx2/dcdev-gcc-base:latest .`
+# `docker build -t octoate/dcdev-gcc-base:latest .`
 
 
 FROM alpine:latest
-LABEL maintainer "Ben Baron <ben@einsteinx2.com>"
+LABEL maintainer "Tim Riemann <triemann@octoate.de>"
 
 # Download all necessary dependencies needed to build the KOS GCC cross-compiler toolchain
 RUN \
     # Install dependencies
     printf "Installing dependencies...\n" \
-    && apk --update add --no-cache bash build-base cmake coreutils curl git libjpeg-turbo-dev libpng-dev linux-headers musl-dev patch python2 subversion texinfo tree wget \
-	&& apk --update add --no-cache libelf-dev --repository=http://dl-cdn.alpinelinux.org/alpine/v3.9/main \
+    && apk --update add --no-cache bash build-base cmake coreutils curl git libjpeg-turbo-dev libpng-dev linux-headers musl-dev patch python3 subversion texinfo tree wget \
+	&& apk --update add --no-cache libelf-dev --repository=http://dl-cdn.alpinelinux.org/alpine/v3.17/main \
 	&& rm -rf /var/cache/apk/* \
     && printf "Done.\n" \
 \

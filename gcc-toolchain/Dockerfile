@@ -1,5 +1,5 @@
 # --------------------------------------------------------
-# KOS GCC Toolchain Image (einsteinx2/dcdev-gcc-toolchain)
+# KOS GCC Toolchain Image (octoate/dcdev-gcc-toolchain)
 # --------------------------------------------------------
 #
 # This image is meant to be a minimally sized image to be used as a base image to create the final fully functional 
@@ -7,8 +7,8 @@
 # 
 # Build Commands:
 # ---------------
-# GCC 9 Toolchain: `docker build -t einsteinx2/dcdev-gcc-toolchain:gcc-9 .`
-# GCC 4 Toolchain: `docker build --build-arg KOS_GCC_VER=4 -t einsteinx2/dcdev-gcc-toolchain:gcc-4 .`
+# GCC 9 Toolchain: `docker build -t octoate/dcdev-gcc-toolchain:gcc-9 .`
+# GCC 4 Toolchain: `docker build --build-arg KOS_GCC_VER=4 -t octoate/dcdev-gcc-toolchain:gcc-4 .`
 
 
 #
@@ -39,8 +39,8 @@ ARG KOS_BRANCH="master"
 # First stage: Alpine-based builder image to compile the GCC toolchain
 #
 
-FROM einsteinx2/dcdev-gcc-base:latest as builder
-LABEL maintainer "Ben Baron <ben@einsteinx2.com>"
+FROM octoate/dcdev-gcc-base:latest as builder
+LABEL maintainer "Tim Riemann <triemann@octoate.de>"
 
 # Choose GCC major version. Supported values are 9 (SH4 9.3/ARM 8.4), 4 (both 4.7.4)
 # Can be set using `--build-arg KOS_GCC_VER=4` when building, default is 9)
@@ -235,7 +235,7 @@ RUN \
 #
 
 FROM alpine:latest
-LABEL maintainer "Ben Baron <ben@einsteinx2.com>"
+LABEL maintainer "Tim Riemann <triemann@octoate.de>"
 
 # Set build arguments
 ARG VERBOSE

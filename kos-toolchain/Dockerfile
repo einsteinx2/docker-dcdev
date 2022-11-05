@@ -1,5 +1,5 @@
 # -------------------------------------------------------------
-# KOS Complete Toolchain Image (einsteinx2/dcdev-kos-toolchain)
+# KOS Complete Toolchain Image (octoate/dcdev-kos-toolchain)
 # -------------------------------------------------------------
 #
 # This image is meant to be used as a fully featured KOS development environment. It includes both the SH4 and
@@ -14,26 +14,26 @@
 #
 # Build Commands:
 # ---------------
-# GCC 9 Toolchain: `docker build -t einsteinx2/dcdev-kos-toolchain:gcc-9 .`
-# GCC 4 Toolchain: `docker build --build-arg KOS_GCC_VER=4 -t einsteinx2/dcdev-kos-toolchain:gcc-4 .`
+# GCC 9 Toolchain: `docker build -t octoate/dcdev-kos-toolchain:gcc-9 .`
+# GCC 4 Toolchain: `docker build --build-arg KOS_GCC_VER=4 -t octoate/dcdev-kos-toolchain:gcc-4 .`
 #
 # Example GCC 9 Usage (run from your project directory):
 # --------------
-# Simple Makefile:   `docker run -it --rm -v $PWD:/src einsteinx2/dcdev-kos-toolchain:gcc-9 make`
-# Build Script:      `docker run -it --rm -v $PWD:/src einsteinx2/dcdev-kos-toolchain:gcc-9 ./dc_build.sh`
-# Interactive Shell: `docker run -it --rm -v $PWD:/src einsteinx2/dcdev-kos-toolchain:gcc-9`
+# Simple Makefile:   `docker run -it --rm -v $PWD:/src octoate/dcdev-kos-toolchain:gcc-9 make`
+# Build Script:      `docker run -it --rm -v $PWD:/src octoate/dcdev-kos-toolchain:gcc-9 ./dc_build.sh`
+# Interactive Shell: `docker run -it --rm -v $PWD:/src octoate/dcdev-kos-toolchain:gcc-9`
 #
 # Example GCC 4 Usage (run from your project directory):
 # --------------
-# Simple Makefile:   `docker run -it --rm -v $PWD:/src einsteinx2/dcdev-kos-toolchain:gcc-4 make`
-# Build Script:      `docker run -it --rm -v $PWD:/src einsteinx2/dcdev-kos-toolchain:gcc-4 ./dc_build.sh`
-# Interactive Shell: `docker run -it --rm -v $PWD:/src einsteinx2/dcdev-kos-toolchain:gcc-4`
+# Simple Makefile:   `docker run -it --rm -v $PWD:/src octoate/dcdev-kos-toolchain:gcc-4 make`
+# Build Script:      `docker run -it --rm -v $PWD:/src octoate/dcdev-kos-toolchain:gcc-4 ./dc_build.sh`
+# Interactive Shell: `docker run -it --rm -v $PWD:/src octoate/dcdev-kos-toolchain:gcc-4`
 #
 # Notes
 # -----
 # More specific tags are provided so you can pin your builds to an exact version of this image if needed. For
-# example, you can specify GCC 9.3 by using the einsteinx2/dcdev-kos-toolchain:gcc-9.3 image, or you can specify 
-# a certain GCC 9.3 image by using a version tag like the einsteinx2/dcdev-kos-toolchain:gcc-9.3__v1.0.0 image.
+# example, you can specify GCC 9.3 by using the octoate/dcdev-kos-toolchain:gcc-9.3 image, or you can specify
+# a certain GCC 9.3 image by using a version tag like the octoate/dcdev-kos-toolchain:gcc-9.3__v1.0.0 image.
 # This is mostly because while the GCC toolchains don't change very often and are usually compatible as long as
 # you're using the same GCC major version (e.g. 9.2 and 9.3), however the KOS library changes more frequently 
 # and may prevent your project from compiling on a newer version without making some (usually minor) changes.
@@ -72,16 +72,16 @@ ARG PORTS_BRANCH="master"
 
 # Choose GCC major version. Supported values are 9 (SH4 9.3/ARM 8.4), 4 (both 4.7.4)
 # Can be set using `--build-arg KOS_GCC_VER=4` when building, default is 9)
-# NOTE: You can technically use any available tag number from the `einsteinx2/dcdev-gcc-toolchain` image here
+# NOTE: You can technically use any available tag number from the `octoate/dcdev-gcc-toolchain` image here
 ARG KOS_GCC_VER=9
 
 #
 # First stage: Pre-built GCC cross-compiler toolchain to build KOS 
 #
 
-FROM einsteinx2/dcdev-gcc-toolchain:gcc-$KOS_GCC_VER as toolchain
-FROM einsteinx2/dcdev-gcc-base:latest as builder
-LABEL maintainer "Ben Baron <ben@einsteinx2.com>"
+FROM octoate/dcdev-gcc-toolchain:gcc-$KOS_GCC_VER as toolchain
+FROM octoate/dcdev-gcc-base:latest as builder
+LABEL maintainer "Tim Riemann <triemann@octoate.de>"
 
 # Set build arguments
 ARG VERBOSE
@@ -222,7 +222,7 @@ RUN \
 #
 
 FROM alpine:latest
-LABEL maintainer "Ben Baron <ben@einsteinx2.com>"
+LABEL maintainer "Tim Riemann <triemann@octoate.de>"
 
 # Set build arguments
 ARG VERBOSE
@@ -244,8 +244,8 @@ RUN \
     && printf "Installing useful tools for building Dreamcast projects...$NL" \
     && apk --update add --no-cache \
        bash bison bzip2 cdrkit cmake colordiff coreutils curl flex gawk git linux-headers \
-       musl-dev make patch python2 sed subversion tar texinfo tree vim wget &> $REDIRECT \
-	&& apk --update add --no-cache libelf-dev --repository=http://dl-cdn.alpinelinux.org/alpine/v3.9/main \
+       musl-dev make patch python3 sed subversion tar texinfo tree vim wget &> $REDIRECT \
+	&& apk --update add --no-cache libelf-dev --repository=http://dl-cdn.alpinelinux.org/alpine/v3.17/main \
     && rm -rf /var/cache/apk/* \
     && printf "Done.\n" \
 \
