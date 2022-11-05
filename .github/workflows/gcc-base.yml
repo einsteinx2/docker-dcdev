@@ -2,9 +2,9 @@ name: Docker Image CI
 
 on:
   push:
-    branches: [ $default-branch ]
+#    branches: [ $default-branch ]
   pull_request:
-    branches: [ $default-branch ]
+#    branches: [ $default-branch ]
 
 env:
   # Use docker.io for Docker Hub if empty
@@ -70,7 +70,7 @@ jobs:
           file: gcc-base/Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          labels: ${{ github.actor }}/gcc-base:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
