@@ -92,6 +92,3 @@ jobs:
         # This step uses the identity token to provision an ephemeral certificate
         # against the sigstore community Fulcio instance.
         run: echo "${{ env.REGISTRY }}/${{ env.OWNER_LC }}/gcc-toolchain:gcc-9" | xargs -I {} cosign sign {}@${{ steps.build-and-push.outputs.digest }}
-
-  #     - name: Build the gcc-base Docker image
-  #       run: docker build -f gcc-base/Dockerfile -t octoate/dcdev-gcc-base:latest -t octoate/dcdev-gcc-base:$(date +%s) .
