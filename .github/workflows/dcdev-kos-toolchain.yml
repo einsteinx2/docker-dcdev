@@ -1,10 +1,11 @@
 name: Docker Image CI - dcdev-kos-toolchain.yml
 
 on:
+  workflow_dispatch:
   push:
-#    branches: [ $default-branch ]
+    branches: [ $default-branch ]
   pull_request:
-#    branches: [ $default-branch ]
+    branches: [ $default-branch ]
 
 env:
   # Use docker.io for Docker Hub if empty
