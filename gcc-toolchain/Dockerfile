@@ -39,7 +39,7 @@ ARG KOS_BRANCH="master"
 # First stage: Alpine-based builder image to compile the GCC toolchain
 #
 
-FROM octoate/dcdev-gcc-base:latest as builder
+FROM ghcr.io/octoate/dcdev-gcc-base:latest as builder
 LABEL maintainer "Tim Riemann <triemann@octoate.de>"
 
 # Choose GCC major version. Supported values are 9 (SH4 9.3/ARM 8.4), 4 (both 4.7.4)

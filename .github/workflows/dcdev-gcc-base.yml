@@ -1,4 +1,4 @@
-name: Docker Image CI
+name: Docker Image CI - dcdev-gcc-base.yml
 
 on:
   push:
@@ -24,6 +24,12 @@ jobs:
       id-token: write
 
     steps:
+      - name: set lower case owner name
+        run: |
+          echo "OWNER_LC=${OWNER,,}" >>${GITHUB_ENV}
+        env:
+          OWNER: '${{ github.repository_owner }}'
+
       - name: Checkout repository
         uses: actions/checkout@v3
 
@@ -69,7 +75,7 @@ jobs:
           context: .
           file: gcc-base/Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.meta.outputs.tags }}
+          tags: ${{ env.REGISTRY }}/${{ env.OWNER_LC }}/dcdev-gcc-base:latest
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
@@ -85,7 +91,7 @@ jobs:
           COSIGN_EXPERIMENTAL: "true"
         # This step uses the identity token to provision an ephemeral certificate
         # against the sigstore community Fulcio instance.
-        run: echo "${{ steps.meta.outputs.tags }}" | xargs -I {} cosign sign {}@${{ steps.build-and-push.outputs.digest }}
+        run: echo "${{ env.REGISTRY }}/${{ env.OWNER_LC }}/dcdev-gcc-base:latest" | xargs -I {} cosign sign {}@${{ steps.build-and-push.outputs.digest }}
 
  #     - name: Build the gcc-base Docker image
  #       run: docker build -f gcc-base/Dockerfile -t octoate/dcdev-gcc-base:latest -t octoate/dcdev-gcc-base:$(date +%s) .
