@@ -1,4 +1,4 @@
-name: Docker Image CI - gcc-kos-toolchain.yml
+name: Docker Image CI - dcdev-kos-toolchain.yml
 
 on:
   push:
@@ -75,7 +75,7 @@ jobs:
           context: .
           file: kos-toolchain/Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ env.REGISTRY }}/${{ env.OWNER_LC }}/kos-toolchain:gcc-9
+          tags: ${{ env.REGISTRY }}/${{ env.OWNER_LC }}/dcdev-kos-toolchain:gcc-9
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
@@ -91,4 +91,4 @@ jobs:
           COSIGN_EXPERIMENTAL: "true"
         # This step uses the identity token to provision an ephemeral certificate
         # against the sigstore community Fulcio instance.
-        run: echo "${{ env.REGISTRY }}/${{ env.OWNER_LC }}/kos-toolchain:gcc-9" | xargs -I {} cosign sign {}@${{ steps.build-and-push.outputs.digest }}
+        run: echo "${{ env.REGISTRY }}/${{ env.OWNER_LC }}/dcdev-kos-toolchain:gcc-9" | xargs -I {} cosign sign {}@${{ steps.build-and-push.outputs.digest }}
