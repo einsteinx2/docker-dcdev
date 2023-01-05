@@ -79,8 +79,8 @@ ARG KOS_GCC_VER=9
 # First stage: Pre-built GCC cross-compiler toolchain to build KOS 
 #
 
-FROM octoate/dcdev-gcc-toolchain:gcc-$KOS_GCC_VER as toolchain
-FROM octoate/dcdev-gcc-base:latest as builder
+FROM ghcr.io/octoate/dcdev-gcc-toolchain:gcc-$KOS_GCC_VER as toolchain
+FROM ghcr.io/octoate/dcdev-gcc-base:latest as builder
 LABEL maintainer "Tim Riemann <triemann@octoate.de>"
 
 # Set build arguments
