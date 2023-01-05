@@ -1,6 +1,7 @@
 name: Docker Image CI - dcdev-gcc-base.yml
 
 on:
+  workflow_dispatch:
   push:
     branches: [ $default-branch ]
   pull_request:
