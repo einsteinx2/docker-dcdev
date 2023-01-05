@@ -245,7 +245,7 @@ RUN \
     && apk --update add --no-cache \
        bash bison bzip2 cdrkit cmake colordiff coreutils curl flex gawk git linux-headers \
        musl-dev make patch python3 sed subversion tar texinfo tree vim wget &> $REDIRECT \
-	&& apk --update add --no-cache libelf-dev --repository=http://dl-cdn.alpinelinux.org/alpine/v3.17/main \
+	&& apk --update add --no-cache elfutils-dev --repository=http://dl-cdn.alpinelinux.org/alpine/v3.17/main \
     && rm -rf /var/cache/apk/* \
     && printf "Done.\n" \
 \
