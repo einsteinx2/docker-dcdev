@@ -207,6 +207,11 @@ RUN \
     && git clone https://github.com/sizious/dcload-ip.git &> $REDIRECT \
     && cd $KOS/utils/dcload-ip \
     && make install \
+    && cd $KOS/utils \
+    && git clone https://github.com/Octoate/dcload-serial.git &> $REDIRECT \
+    && cd $KOS/utils/dcload-serial \
+    && git branch minilzo-2.10 \
+    && make install \
     && printf "Done.\n"
 RUN \
     # Prepare files to copy in next stage
