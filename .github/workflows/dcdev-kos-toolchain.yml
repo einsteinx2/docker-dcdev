@@ -76,10 +76,11 @@ jobs:
           context: .
           file: kos-toolchain/Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ env.REGISTRY }}/${{ env.OWNER_LC }}/dcdev-kos-toolchain:gcc-9
+          tags: ${{ env.REGISTRY }}/${{ env.OWNER_LC }}/dcdev-kos-toolchain:gcc-12
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          build-args: KOS_GCC_VER=12
 
       # Sign the resulting Docker image digest except on PRs.
       # This will only write to the public Rekor transparency log when the Docker
