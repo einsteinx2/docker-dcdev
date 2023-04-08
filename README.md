@@ -11,6 +11,12 @@ If you just want a complete ready to go KOS environment, the only image you need
 
 ## Quick Start
 
+### Example GCC 12 Usage (run from your project directory):
+**Simple Makefile:**   `docker run -it --rm -v $PWD:/src ghcr.io/octoate/dcdev-kos-toolchain:gcc-12 make`<br/>
+**Build Script:**      `docker run -it --rm -v $PWD:/src ghcr.io/octoate/dcdev-kos-toolchain:gcc-12 ./dc_build.sh`<br/>
+**Interactive Shell:** `docker run -it --rm -v $PWD:/src ghcr.io/octoate/dcdev-kos-toolchain:gcc-12`
+
+
 ### Example GCC 9 Usage (run from your project directory):
 **Simple Makefile:**   `docker run -it --rm -v $PWD:/src ghcr.io/octoate/dcdev-kos-toolchain:gcc-9 make`<br/>
 **Build Script:**      `docker run -it --rm -v $PWD:/src ghcr.io/octoate/dcdev-kos-toolchain:gcc-9 ./dc_build.sh`<br/>
@@ -52,10 +58,12 @@ However, it does not include the standard x86_64 GCC tools as they are not requi
 `docker build -f gcc-base/Dockerfile -t ghcr.io/octoate/dcdev-gcc-base:latest .`
 
 ### ghcr.io/octoate/dcdev-gcc-toolchain
+**GCC 12:** `docker build -f gcc-toolchain/Dockerfile -t ghcr.io/octoate/dcdev-gcc-toolchain:gcc-12 .`<br/>
 **GCC 9:** `docker build -f gcc-toolchain/Dockerfile -t ghcr.io/octoate/dcdev-gcc-toolchain:gcc-9 .`<br/>
 **GCC 4:** `docker build --build-arg KOS_GCC_VER=4 -f gcc-toolchain/Dockerfile -t ghcr.io/octoate/dcdev-gcc-toolchain:gcc-4 .`
 
 ### ghcr.io/octoate/dcdev-kos-toolchain
+**GCC 12:** `docker build -f kos-toolchain/Dockerfile -t ghcr.io/octoate/dcdev-kos-toolchain:gcc-12 .`<br/>
 **GCC 9:** `docker build -f kos-toolchain/Dockerfile -t ghcr.io/octoate/dcdev-kos-toolchain:gcc-9 .`<br/>
 **GCC 4:** `docker build --build-arg KOS_GCC_VER=4 -f kos-toolchain/Dockerfile -t ghcr.io/octoate/dcdev-kos-toolchain:gcc-4 .`
 
