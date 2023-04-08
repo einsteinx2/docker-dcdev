@@ -7,6 +7,7 @@
 # 
 # Build Commands:
 # ---------------
+# GCC 12 Toolchain: `docker build --build-arg KOS_GCC_VER=12 -t octoate/dcdev-gcc-toolchain:gcc-12 .`
 # GCC 9 Toolchain: `docker build -t octoate/dcdev-gcc-toolchain:gcc-9 .`
 # GCC 4 Toolchain: `docker build --build-arg KOS_GCC_VER=4 -t octoate/dcdev-gcc-toolchain:gcc-4 .`
 
@@ -39,7 +40,7 @@ ARG KOS_BRANCH="master"
 # First stage: Alpine-based builder image to compile the GCC toolchain
 #
 
-FROM ghcr.io/octoate/dcdev-gcc-base:latest as builder
+FROM octoate/dcdev-gcc-base:latest as builder
 LABEL maintainer "Tim Riemann <triemann@octoate.de>"
 
 # Choose GCC major version. Supported values are 9 (SH4 9.3/ARM 8.4), 4 (both 4.7.4)
@@ -63,7 +64,31 @@ ENV DC_CHAIN_CONFIG_MK="$KOS/utils/dc-chain/config.mk"
 SHELL ["/bin/bash", "-c"]
 
 # Validate KOS_GCC_VER argument and set build variables
-RUN if [ "$KOS_GCC_VER" -eq 9 ]; then \
+RUN if [ "$KOS_GCC_VER" -eq 12 ]; then \
+        # Versions for SH4 toolchain
+        printf "export DOCKER_SH4_BINUTILS_VER=2.40\n" >> /tmp/dockerenv.sh; \
+        printf "export DOCKER_SH4_GCC_VER=12.2.0\n" >> /tmp/dockerenv.sh; \
+        printf "export DOCKER_SH4_NEWLIB_VER=4.3.0.20230120\n" >> /tmp/dockerenv.sh; \
+        printf "export DOCKER_SH4_GDB_VER=13.1\n" >> /tmp/dockerenv.sh; \
+        printf "export DOCKER_SH4_INSIGHT_VER=6.8-1\n" >> /tmp/dockerenv.sh; \
+        # Tarball extensions for SH4 toolchain
+        printf "export DOCKER_SH4_BINUTILS_EXT=xz\n" >> /tmp/dockerenv.sh; \
+        printf "export DOCKER_SH4_GCC_EXT=xz\n" >> /tmp/dockerenv.sh; \
+        printf "export DOCKER_SH4_NEWLIB_EXT=gz\n" >> /tmp/dockerenv.sh; \
+        printf "export DOCKER_SH4_GDB_EXT=xz\n" >> /tmp/dockerenv.sh; \
+        printf "export DOCKER_SH4_INSIGHT_EXT=bz2\n" >> /tmp/dockerenv.sh; \
+        # Versions for ARM toolchain
+        printf "export DOCKER_ARM_BINUTILS_VER=2.40\n" >> /tmp/dockerenv.sh; \
+        printf "export DOCKER_ARM_GCC_VER=8.4.0\n" >> /tmp/dockerenv.sh; \
+        # Tarball extensions for ARM toolchain
+        printf "export DOCKER_ARM_BINUTILS_EXT=xz\n" >> /tmp/dockerenv.sh; \
+        printf "export DOCKER_ARM_GCC_EXT=xz\n" >> /tmp/dockerenv.sh; \
+        # GCC dependencies for SH
+        printf "export DOCKER_SH4_GMP_VER=6.2.1\n" >> /tmp/dockerenv.sh; \
+        printf "export DOCKER_SH4_MPFR_VER=4.1.0\n" >> /tmp/dockerenv.sh; \
+        printf "export DOCKER_SH4_MPC_VER=1.2.1\n" >> /tmp/dockerenv.sh; \
+        printf "export DOCKER_SH4_ISL_VER=0.24\n" >> /tmp/dockerenv.sh; \
+    elif [ "$KOS_GCC_VER" -eq 9 ]; then \
         # Versions for SH4 toolchain
         printf "export DOCKER_SH4_BINUTILS_VER=2.34\n" >> /tmp/dockerenv.sh; \
         printf "export DOCKER_SH4_GCC_VER=9.3.0\n" >> /tmp/dockerenv.sh; \
@@ -102,7 +127,7 @@ RUN if [ "$KOS_GCC_VER" -eq 9 ]; then \
         printf "export DOCKER_ARM_BINUTILS_EXT=xz\n" >> /tmp/dockerenv.sh; \
         printf "export DOCKER_ARM_GCC_EXT=bz2\n" >> /tmp/dockerenv.sh; \
     else \
-        printf "Invalid KOS_GCC_VER specified, supported values are 9 (SH4 9.3/ARM 8.4) and 4 (both 4.7.4)."; \
+        printf "Invalid KOS_GCC_VER specified, supported values are 12 (SH4 12.2/ARM 8.4), 9 (SH4 9.3/ARM 8.4) and 4 (both 4.7.4)."; \
         exit 1; \
     fi \
     && . /tmp/dockerenv.sh \
@@ -167,6 +192,13 @@ RUN \
     && printf "Patching SH4 toolchain extensions$NL" \
     && sed -i "/^arm_binutils_tarball_type/c\arm_binutils_tarball_type=$DOCKER_ARM_BINUTILS_EXT" $DC_CHAIN_CONFIG_MK \
     && sed -i "/^arm_gcc_tarball_type/c\arm_gcc_tarball_type=$DOCKER_ARM_GCC_EXT" $DC_CHAIN_CONFIG_MK \
+    \
+    && printf "Patching GCC dependencies for SH versions$NL" \
+    && sed -i -e 's/#use_custom_dependencies=1/use_custom_dependencies=1/g' $DC_CHAIN_CONFIG_MK \
+    && sed -i "/^sh_gmp_ver/c\sh_gmp_ver=$DOCKER_SH4_GMP_VER" $DC_CHAIN_CONFIG_MK \
+    && sed -i "/^sh_mpfr_ver/c\sh_mpfr_ver=$DOCKER_SH4_MPFR_VER" $DC_CHAIN_CONFIG_MK \
+    && sed -i "/^sh_mpc_ver/c\sh_mpc_ver=$DOCKER_SH4_MPC_VER" $DC_CHAIN_CONFIG_MK \
+    && sed -i "/^sh_isl_ver/c\sh_isl_ver=$DOCKER_SH4_ISL_VER" $DC_CHAIN_CONFIG_MK \
     && printf "Done.\n"
 RUN \
     # Download and unpack compiler toolchain

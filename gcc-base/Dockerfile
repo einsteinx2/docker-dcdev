@@ -19,9 +19,27 @@ LABEL maintainer "Tim Riemann <triemann@octoate.de>"
 RUN \
     # Install dependencies
     printf "Installing dependencies...\n" \
-    && apk --update add --no-cache bash build-base cmake coreutils curl git libjpeg-turbo-dev libpng-dev linux-headers musl-dev patch python3 subversion texinfo tree wget \
-	&& apk --update add --no-cache elfutils-dev --repository=http://dl-cdn.alpinelinux.org/alpine/v3.17/main \
-	&& rm -rf /var/cache/apk/* \
+    && apk --update add --no-cache \
+        bash \
+    	build-base \
+        cmake \
+        coreutils \
+        curl \
+    	patch \
+    	bash \
+    	texinfo \
+    	libjpeg-turbo-dev \
+    	libpng-dev \
+        linux-headers \
+        musl-dev \
+        patch \
+    	wget \
+    	git \
+    	python3 \
+    	subversion \
+    	gmp-dev \
+    && apk --update add --no-cache elfutils-dev --repository=http://dl-cdn.alpinelinux.org/alpine/v3.17/main \
+    && rm -rf /var/cache/apk/* \
     && printf "Done.\n" \
 \
     # Prepare .bashrc

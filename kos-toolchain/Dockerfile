@@ -14,8 +14,15 @@
 #
 # Build Commands:
 # ---------------
+# GCC 12 Toolchain: `docker build --build-arg KOS_GCC_VER=12 -t octoate/dcdev-kos-toolchain:gcc-12 .`
 # GCC 9 Toolchain: `docker build -t octoate/dcdev-kos-toolchain:gcc-9 .`
 # GCC 4 Toolchain: `docker build --build-arg KOS_GCC_VER=4 -t octoate/dcdev-kos-toolchain:gcc-4 .`
+#
+# Example GCC 12 Usage (run from your project directory):
+# --------------
+# Simple Makefile:   `docker run -it --rm -v $PWD:/src octoate/dcdev-kos-toolchain:gcc-12 make`
+# Build Script:      `docker run -it --rm -v $PWD:/src octoate/dcdev-kos-toolchain:gcc-12 ./dc_build.sh`
+# Interactive Shell: `docker run -it --rm -v $PWD:/src octoate/dcdev-kos-toolchain:gcc-12`
 #
 # Example GCC 9 Usage (run from your project directory):
 # --------------
@@ -79,8 +86,8 @@ ARG KOS_GCC_VER=9
 # First stage: Pre-built GCC cross-compiler toolchain to build KOS 
 #
 
-FROM ghcr.io/octoate/dcdev-gcc-toolchain:gcc-$KOS_GCC_VER as toolchain
-FROM ghcr.io/octoate/dcdev-gcc-base:latest as builder
+FROM octoate/dcdev-gcc-toolchain:gcc-$KOS_GCC_VER as toolchain
+FROM octoate/dcdev-gcc-base:latest as builder
 LABEL maintainer "Tim Riemann <triemann@octoate.de>"
 
 # Set build arguments
