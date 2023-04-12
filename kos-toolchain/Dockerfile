@@ -211,7 +211,7 @@ RUN \
     && make cdi4dc &> $REDIRECT \
     && ln -s $KOS/utils/img4dc/cdi4dc/cdi4dc $DCTOOLCHAIN/bin/cdi4dc \
     && cd $KOS/utils \ 
-    && git clone https://github.com/sizious/dcload-ip.git &> $REDIRECT \
+    && git clone https://github.com/KallistiOS/dcload-ip &> $REDIRECT \
     && cd $KOS/utils/dcload-ip \
     && make install \
     && cd $KOS/utils \
