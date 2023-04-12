@@ -25,9 +25,11 @@ RUN \
         cmake \
         coreutils \
         curl \
+        meson \
     	patch \
     	bash \
     	texinfo \
+        libisofs-dev \
     	libjpeg-turbo-dev \
     	libpng-dev \
         linux-headers \
