@@ -219,6 +219,12 @@ RUN \
     && cd $KOS/utils/dcload-serial \
     && git checkout use_minilzo210 \
     && make install \
+    && cd $KOS/utils \
+    && git clone https://gitlab.com/simulant/mkdcdisc.git &> $REDIRECT \
+    && cd $KOS/utils/mkdcdisc \
+    && meson setup builddir \
+    && meson compile -C builddir \
+    && ln -s $KOS/utils/mkdcdisc/builddir/mkdcdisc $DCTOOLCHAIN/bin/mkdcdisc \
     && printf "Done.\n"
 RUN \
     # Prepare files to copy in next stage
