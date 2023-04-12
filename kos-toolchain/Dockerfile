@@ -217,7 +217,7 @@ RUN \
     && cd $KOS/utils \
     && git clone https://github.com/Octoate/dcload-serial.git &> $REDIRECT \
     && cd $KOS/utils/dcload-serial \
-    && git checkout minilzo-2.10 \
+    && git checkout use_minilzo210 \
     && make install \
     && printf "Done.\n"
 RUN \
