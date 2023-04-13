@@ -29,6 +29,7 @@ RUN \
     	patch \
     	bash \
     	texinfo \
+        libisofs \
         libisofs-dev \
     	libjpeg-turbo-dev \
     	libpng-dev \
