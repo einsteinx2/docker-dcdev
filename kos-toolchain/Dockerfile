@@ -217,7 +217,6 @@ RUN \
     && cd $KOS/utils \
     && git clone https://github.com/KallistiOS/dcload-serial.git &> $REDIRECT \
     && cd $KOS/utils/dcload-serial \
-    && git checkout use_minilzo210 \
     && make install \
     && cd $KOS/utils \
     && git clone https://gitlab.com/simulant/mkdcdisc.git &> $REDIRECT \
