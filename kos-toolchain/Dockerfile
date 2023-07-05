@@ -215,7 +215,7 @@ RUN \
     && cd $KOS/utils/dcload-ip \
     && make install \
     && cd $KOS/utils \
-    && git clone https://github.com/Octoate/dcload-serial.git &> $REDIRECT \
+    && git clone https://github.com/KallistiOS/dcload-serial.git &> $REDIRECT \
     && cd $KOS/utils/dcload-serial \
     && git checkout use_minilzo210 \
     && make install \
