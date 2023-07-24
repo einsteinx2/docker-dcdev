@@ -14,15 +14,15 @@
 #
 # Build Commands:
 # ---------------
-# GCC 12 Toolchain: `docker build --build-arg KOS_GCC_VER=12 -t octoate/dcdev-kos-toolchain:gcc-12 .`
+# GCC 13 Toolchain: `docker build --build-arg KOS_GCC_VER=13 -t octoate/dcdev-kos-toolchain:gcc-13 .`
 # GCC 9 Toolchain: `docker build -t octoate/dcdev-kos-toolchain:gcc-9 .`
 # GCC 4 Toolchain: `docker build --build-arg KOS_GCC_VER=4 -t octoate/dcdev-kos-toolchain:gcc-4 .`
 #
-# Example GCC 12 Usage (run from your project directory):
+# Example GCC 13 Usage (run from your project directory):
 # --------------
-# Simple Makefile:   `docker run -it --rm -v $PWD:/src octoate/dcdev-kos-toolchain:gcc-12 make`
-# Build Script:      `docker run -it --rm -v $PWD:/src octoate/dcdev-kos-toolchain:gcc-12 ./dc_build.sh`
-# Interactive Shell: `docker run -it --rm -v $PWD:/src octoate/dcdev-kos-toolchain:gcc-12`
+# Simple Makefile:   `docker run -it --rm -v $PWD:/src octoate/dcdev-kos-toolchain:gcc-13 make`
+# Build Script:      `docker run -it --rm -v $PWD:/src octoate/dcdev-kos-toolchain:gcc-13 ./dc_build.sh`
+# Interactive Shell: `docker run -it --rm -v $PWD:/src octoate/dcdev-kos-toolchain:gcc-13`
 #
 # Example GCC 9 Usage (run from your project directory):
 # --------------
