@@ -7,7 +7,7 @@
 # 
 # Build Commands:
 # ---------------
-# GCC 12 Toolchain: `docker build --build-arg KOS_GCC_VER=12 -t octoate/dcdev-gcc-toolchain:gcc-12 .`
+# GCC 13 Toolchain: `docker build --build-arg KOS_GCC_VER=12 -t octoate/dcdev-gcc-toolchain:gcc-13 .`
 # GCC 9 Toolchain: `docker build -t octoate/dcdev-gcc-toolchain:gcc-9 .`
 # GCC 4 Toolchain: `docker build --build-arg KOS_GCC_VER=4 -t octoate/dcdev-gcc-toolchain:gcc-4 .`
 
@@ -64,12 +64,12 @@ ENV DC_CHAIN_CONFIG_MK="$KOS/utils/dc-chain/config.mk"
 SHELL ["/bin/bash", "-c"]
 
 # Validate KOS_GCC_VER argument and set build variables
-RUN if [ "$KOS_GCC_VER" -eq 12 ]; then \
+RUN if [ "$KOS_GCC_VER" -eq 13 ]; then \
         # Versions for SH4 toolchain
         printf "export DOCKER_SH4_BINUTILS_VER=2.40\n" >> /tmp/dockerenv.sh; \
-        printf "export DOCKER_SH4_GCC_VER=12.2.0\n" >> /tmp/dockerenv.sh; \
+        printf "export DOCKER_SH4_GCC_VER=13.1.0\n" >> /tmp/dockerenv.sh; \
         printf "export DOCKER_SH4_NEWLIB_VER=4.3.0.20230120\n" >> /tmp/dockerenv.sh; \
-        printf "export DOCKER_SH4_GDB_VER=13.1\n" >> /tmp/dockerenv.sh; \
+        printf "export DOCKER_SH4_GDB_VER=13.2\n" >> /tmp/dockerenv.sh; \
         printf "export DOCKER_SH4_INSIGHT_VER=6.8-1\n" >> /tmp/dockerenv.sh; \
         # Tarball extensions for SH4 toolchain
         printf "export DOCKER_SH4_BINUTILS_EXT=xz\n" >> /tmp/dockerenv.sh; \
@@ -79,7 +79,7 @@ RUN if [ "$KOS_GCC_VER" -eq 12 ]; then \
         printf "export DOCKER_SH4_INSIGHT_EXT=bz2\n" >> /tmp/dockerenv.sh; \
         # Versions for ARM toolchain
         printf "export DOCKER_ARM_BINUTILS_VER=2.40\n" >> /tmp/dockerenv.sh; \
-        printf "export DOCKER_ARM_GCC_VER=8.4.0\n" >> /tmp/dockerenv.sh; \
+        printf "export DOCKER_ARM_GCC_VER=8.5.0\n" >> /tmp/dockerenv.sh; \
         # Tarball extensions for ARM toolchain
         printf "export DOCKER_ARM_BINUTILS_EXT=xz\n" >> /tmp/dockerenv.sh; \
         printf "export DOCKER_ARM_GCC_EXT=xz\n" >> /tmp/dockerenv.sh; \
