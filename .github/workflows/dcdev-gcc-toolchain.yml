@@ -76,7 +76,7 @@ jobs:
           context: .
           file: gcc-toolchain/Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ env.REGISTRY }}/${{ env.OWNER_LC }}/dcdev-gcc-toolchain:gcc-12
+          tags: ${{ env.REGISTRY }}/${{ env.OWNER_LC }}/dcdev-gcc-toolchain:gcc-13
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
