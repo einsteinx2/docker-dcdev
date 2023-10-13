@@ -12,20 +12,23 @@
 # `docker build -t einsteinx2/dcdev-gcc-base:latest .`
 
 
-FROM alpine:latest
+FROM debian:12-slim
 LABEL maintainer "Ben Baron <ben@einsteinx2.com>"
+LABEL org.opencontainers.image.source=https://github.com/einsteinx2/docker-dcdev
+LABEL org.opencontainers.image.licenses=MIT
+LABEL org.opencontainers.image.description="The base image to create the GCC cross-compiler toolchain image that will be used to build the final fully functional KOS toolchain images to prevent the need to download all of the dependencies each time when rebuilding images locally (or CI if image caching is available). When cached locally, this saves hundreds of megabytes of package downloads plus install time."
 
 # Download all necessary dependencies needed to build the KOS GCC cross-compiler toolchain
 RUN \
     # Install dependencies
     printf "Installing dependencies...\n" \
-    && apk --update add --no-cache bash build-base cmake coreutils curl git libjpeg-turbo-dev libpng-dev linux-headers musl-dev patch python2 subversion texinfo tree wget \
-	&& apk --update add --no-cache libelf-dev --repository=http://dl-cdn.alpinelinux.org/alpine/v3.9/main \
-	&& rm -rf /var/cache/apk/* \
+    && export DEBIAN_FRONTEND=noninteractive \
+    && apt-get update && apt-get upgrade -y \
+    && apt-get install -y cmake gawk patch bzip2 tar make libgmp-dev libmpfr-dev libmpc-dev \
+        gettext wget libelf-dev texinfo bison flex sed git build-essential diffutils curl \
+        libjpeg-dev libpng-dev python3 pkg-config libisofs-dev meson ninja-build \
+	&& rm -rf /var/lib/apt/lists/* \
     && printf "Done.\n" \
-\
-    # Prepare .bashrc
-    && printf ". /etc/profile\n" > ~/.bashrc \
 \
     # Create verbose output toggle script used in child images (file can be appended to by child images to store more environment variables)
     && printf 'if $VERBOSE; then\n  export REDIRECT="/dev/stdout";\n  export NL="\\n";\nelse\n  export REDIRECT="/dev/null";\n  export NL="";\nfi\n' > /tmp/dockerenv.sh \

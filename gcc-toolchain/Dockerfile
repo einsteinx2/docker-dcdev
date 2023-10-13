@@ -7,8 +7,8 @@
 # 
 # Build Commands:
 # ---------------
-# GCC 9 Toolchain: `docker build -t einsteinx2/dcdev-gcc-toolchain:gcc-9 .`
-# GCC 4 Toolchain: `docker build --build-arg KOS_GCC_VER=4 -t einsteinx2/dcdev-gcc-toolchain:gcc-4 .`
+# GCC 13 Toolchain: `docker build -t einsteinx2/dcdev-gcc-toolchain:stable .`
+# GCC  4 Toolchain: `docker build --build-arg KOS_GCC_VER=legacy -t einsteinx2/dcdev-gcc-toolchain:legacy .`
 
 
 #
@@ -36,15 +36,14 @@ ARG KOS_REPO="https://github.com/KallistiOS/KallistiOS.git"
 ARG KOS_BRANCH="master"
 
 #
-# First stage: Alpine-based builder image to compile the GCC toolchain
+# First stage: Debian-based builder image to compile the GCC toolchain
 #
 
 FROM einsteinx2/dcdev-gcc-base:latest as builder
-LABEL maintainer "Ben Baron <ben@einsteinx2.com>"
 
-# Choose GCC major version. Supported values are 9 (SH4 9.3/ARM 8.4), 4 (both 4.7.4)
-# Can be set using `--build-arg KOS_GCC_VER=4` when building, default is 9)
-ARG KOS_GCC_VER=9
+# Choose GCC major version. Supported values are "stable" (currently SH4 13.2.0/ARM 8.5.0) and "legacy" (always both 4.7.4)
+# Can be set using `--build-arg KOS_GCC_VER=legacy` when building, default is stable)
+ARG KOS_GCC_VER=stable
 
 # Set build arguments
 ARG TARGETPLATFORM
@@ -63,50 +62,11 @@ ENV DC_CHAIN_CONFIG_MK="$KOS/utils/dc-chain/config.mk"
 SHELL ["/bin/bash", "-c"]
 
 # Validate KOS_GCC_VER argument and set build variables
-RUN if [ "$KOS_GCC_VER" -eq 9 ]; then \
-        # Versions for SH4 toolchain
-        printf "export DOCKER_SH4_BINUTILS_VER=2.34\n" >> /tmp/dockerenv.sh; \
-        printf "export DOCKER_SH4_GCC_VER=9.3.0\n" >> /tmp/dockerenv.sh; \
-        printf "export DOCKER_SH4_NEWLIB_VER=3.3.0\n" >> /tmp/dockerenv.sh; \
-        printf "export DOCKER_SH4_GDB_VER=9.2\n" >> /tmp/dockerenv.sh; \
-        printf "export DOCKER_SH4_INSIGHT_VER=6.8-1\n" >> /tmp/dockerenv.sh; \
-        # Tarball extensions for SH4 toolchain
-        printf "export DOCKER_SH4_BINUTILS_EXT=xz\n" >> /tmp/dockerenv.sh; \
-        printf "export DOCKER_SH4_GCC_EXT=xz\n" >> /tmp/dockerenv.sh; \
-        printf "export DOCKER_SH4_NEWLIB_EXT=gz\n" >> /tmp/dockerenv.sh; \
-        printf "export DOCKER_SH4_GDB_EXT=xz\n" >> /tmp/dockerenv.sh; \
-        printf "export DOCKER_SH4_INSIGHT_EXT=bz2\n" >> /tmp/dockerenv.sh; \
-        # Versions for ARM toolchain
-        printf "export DOCKER_ARM_BINUTILS_VER=2.34\n" >> /tmp/dockerenv.sh; \
-        printf "export DOCKER_ARM_GCC_VER=8.4.0\n" >> /tmp/dockerenv.sh; \
-        # Tarball extensions for ARM toolchain
-        printf "export DOCKER_ARM_BINUTILS_EXT=xz\n" >> /tmp/dockerenv.sh; \
-        printf "export DOCKER_ARM_GCC_EXT=xz\n" >> /tmp/dockerenv.sh; \
-    elif [ "$KOS_GCC_VER" -eq 4 ]; then \
-        # Versions for SH4 toolchain
-        printf "export DOCKER_SH4_BINUTILS_VER=2.34\n" >> /tmp/dockerenv.sh; \
-        printf "export DOCKER_SH4_GCC_VER=4.7.4\n" >> /tmp/dockerenv.sh; \
-        printf "export DOCKER_SH4_NEWLIB_VER=2.0.0\n" >> /tmp/dockerenv.sh; \
-        printf "export DOCKER_SH4_GDB_VER=9.2\n" >> /tmp/dockerenv.sh; \
-        printf "export DOCKER_SH4_INSIGHT_VER=6.8-1\n" >> /tmp/dockerenv.sh; \
-        # Tarball extensions for SH4 toolchain
-        printf "export DOCKER_SH4_BINUTILS_EXT=xz\n" >> /tmp/dockerenv.sh; \
-        printf "export DOCKER_SH4_GCC_EXT=bz2\n" >> /tmp/dockerenv.sh; \
-        printf "export DOCKER_SH4_NEWLIB_EXT=gz\n" >> /tmp/dockerenv.sh; \
-        printf "export DOCKER_SH4_GDB_EXT=xz\n" >> /tmp/dockerenv.sh; \
-        printf "export DOCKER_SH4_INSIGHT_EXT=bz2\n" >> /tmp/dockerenv.sh; \
-        # Versions for ARM toolchain
-        printf "export DOCKER_ARM_BINUTILS_VER=2.34\n" >> /tmp/dockerenv.sh; \
-        printf "export DOCKER_ARM_GCC_VER=4.7.4\n" >> /tmp/dockerenv.sh; \
-        # Tarball extensions for ARM toolchain
-        printf "export DOCKER_ARM_BINUTILS_EXT=xz\n" >> /tmp/dockerenv.sh; \
-        printf "export DOCKER_ARM_GCC_EXT=bz2\n" >> /tmp/dockerenv.sh; \
-    else \
-        printf "Invalid KOS_GCC_VER specified, supported values are 9 (SH4 9.3/ARM 8.4) and 4 (both 4.7.4)."; \
+RUN if [ "$KOS_GCC_VER" != "stable" ] && [ "$KOS_GCC_VER" != "legacy" ]; then \
+        printf "Invalid KOS_GCC_VER specified, supported values are \"stable\" (currently SH4 13.2.0/ARM 8.5.0) and \"legacy\" (always both 4.7.4)."; \
         exit 1; \
     fi \
-    && . /tmp/dockerenv.sh \
-    && printf "Building SH4 GCC $DOCKER_SH4_GCC_VER and ARM GCC $DOCKER_ARM_GCC_VER\n"
+    && printf "Building GCC version $KOS_GCC_VER\n"
 
 # Validate THREADS argument and set build variables
 RUN if [ "$THREADS" -eq 0 ] 2>/dev/null; then \
@@ -132,76 +92,37 @@ RUN \
     && git clone --single-branch --branch $KOS_BRANCH $KOS_REPO $KOS &> $REDIRECT \
     && printf "Done.\n"
 RUN \
-    # Patch the dc-chain config.mk file to set job threads and remove Obj-C support 
+    # Copy the correct config.mk file and patch it to set job threads and remove Obj-C support 
     . /tmp/dockerenv.sh \
     && printf "Copying sample dc-chain config.mk file...$NL" \
-    && cp $DC_CHAIN/config.mk.stable.sample $DC_CHAIN_CONFIG_MK \
+    && cp $DC_CHAIN/config/config.mk.$KOS_GCC_VER.sample $DC_CHAIN_CONFIG_MK \
     && printf "Patching dc-chain config.mk file to set threads and languages...$NL" \
     && sed -i "/^makejobs/c\makejobs=-j$DOCKER_THREADS" $DC_CHAIN_CONFIG_MK \
     && sed -i "/^pass2_languages/c\pass2_languages=c,c++" $DC_CHAIN_CONFIG_MK \
-    && sed -i "/^erase/c\erase=0" $DC_CHAIN_CONFIG_MK \
+    # TODO: Remember why I don't erase the build directories... I think it was because I needed access to them later for some reason but I don't remember why. Maybe becuase I build SH4 and ARM in separate steps?
+    && sed -i "/^erase/c\erase=0" $DC_CHAIN_CONFIG_MK \ 
     && printf "Done.\n"
-RUN \
-    # Patch dc-chain config.mk file to set GCC versions
-    . /tmp/dockerenv.sh \
-    && printf "Patching dc-chain config.mk file to set GCC versions...$NL" \
-    \
-    && printf "Patching SH4 toolchain versions$NL" \
-    && sed -i "/^sh_binutils_ver/c\sh_binutils_ver=$DOCKER_SH4_BINUTILS_VER" $DC_CHAIN_CONFIG_MK \
-    && sed -i "/^sh_gcc_ver/c\sh_gcc_ver=$DOCKER_SH4_GCC_VER" $DC_CHAIN_CONFIG_MK \
-    && sed -i "/^newlib_ver/c\newlib_ver=$DOCKER_SH4_NEWLIB_VER" $DC_CHAIN_CONFIG_MK \
-    && sed -i "/^gdb_ver/c\gdb_ver=$DOCKER_SH4_GDB_VER" $DC_CHAIN_CONFIG_MK \
-    && sed -i "/^insight_ver/c\insight_ver=$DOCKER_SH4_INSIGHT_VER" $DC_CHAIN_CONFIG_MK \
-    \
-    && printf "Patching SH4 toolchain extensions$NL" \
-    && sed -i "/^sh_binutils_tarball_type/c\sh_binutils_tarball_type=$DOCKER_SH4_BINUTILS_EXT" $DC_CHAIN_CONFIG_MK \
-    && sed -i "/^sh_gcc_tarball_type/c\sh_gcc_tarball_type=$DOCKER_SH4_GCC_EXT" $DC_CHAIN_CONFIG_MK \
-    && sed -i "/^newlib_tarball_type/c\newlib_tarball_type=$DOCKER_SH4_NEWLIB_EXT" $DC_CHAIN_CONFIG_MK \
-    && sed -i "/^gdb_tarball_type/c\gdb_tarball_type=$DOCKER_SH4_GDB_EXT" $DC_CHAIN_CONFIG_MK \
-    && sed -i "/^insight_tarball_type/c\insight_tarball_type=$DOCKER_SH4_INSIGHT_EXT" $DC_CHAIN_CONFIG_MK \
-    \
-    && printf "Patching ARM toolchain versions$NL" \
-    && sed -i "/^arm_binutils_ver/c\arm_binutils_ver=$DOCKER_ARM_BINUTILS_VER" $DC_CHAIN_CONFIG_MK \
-    && sed -i "/^arm_gcc_ver/c\arm_gcc_ver=$DOCKER_ARM_GCC_VER" $DC_CHAIN_CONFIG_MK \
-    \
-    && printf "Patching SH4 toolchain extensions$NL" \
-    && sed -i "/^arm_binutils_tarball_type/c\arm_binutils_tarball_type=$DOCKER_ARM_BINUTILS_EXT" $DC_CHAIN_CONFIG_MK \
-    && sed -i "/^arm_gcc_tarball_type/c\arm_gcc_tarball_type=$DOCKER_ARM_GCC_EXT" $DC_CHAIN_CONFIG_MK \
-    && printf "Done.\n"
-RUN \
-    # Download and unpack compiler toolchain
-    . /tmp/dockerenv.sh \
-    && cd $DC_CHAIN \
-    && printf "Downloading compiler toolchain...$NL" \
-    && $DC_CHAIN/download.sh &> $REDIRECT \
-    && printf "Done.\nUnpacking compiler toolchain...$NL" \
-    && $DC_CHAIN/unpack.sh &> $REDIRECT \
-    && printf "Done.\n"
-RUN \
-    # Patch compiler toolchain
-    . /tmp/dockerenv.sh \
-    && printf "Patching compiler toolchain...$NL" \
-    && make -C $DC_CHAIN patch &> $REDIRECT \
-    && printf "Done.\n"
-RUN \
-    # Update arch detection when building GCC 4 for linux/arm64 platform
-    . /tmp/dockerenv.sh \
-    && printf "Updating arch detection if necessary...$NL" \
-    && if [ "$KOS_GCC_VER" -eq 4 ] && [ "$TARGETPLATFORM" == "linux/arm64" ]; then \
-            printf "Updating config.guess to support $TARGETPLATFORM when building GCC $KOS_GCC_VER...$NL" \
-            && wget -O $DC_CHAIN/gcc-$DOCKER_SH4_GCC_VER/config.guess 'https://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.guess;hb=HEAD' &> $REDIRECT \
-            && wget -O $DC_CHAIN/gcc-$DOCKER_SH4_GCC_VER/config.sub 'https://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.sub;hb=HEAD' &> $REDIRECT \
-            && cp $DC_CHAIN/gcc-$DOCKER_SH4_GCC_VER/config.guess $DC_CHAIN/gcc-$DOCKER_SH4_GCC_VER/config.sub $DC_CHAIN/gcc-$DOCKER_SH4_GCC_VER/mpc-0.8.1/ \
-            && cp $DC_CHAIN/gcc-$DOCKER_SH4_GCC_VER/config.guess $DC_CHAIN/gcc-$DOCKER_SH4_GCC_VER/config.sub $DC_CHAIN/gcc-$DOCKER_SH4_GCC_VER/libjava/libltdl/ \
-            && cp $DC_CHAIN/gcc-$DOCKER_SH4_GCC_VER/config.guess $DC_CHAIN/gcc-$DOCKER_SH4_GCC_VER/config.sub $DC_CHAIN/gcc-$DOCKER_SH4_GCC_VER/libjava/classpath/ \
-            && cp $DC_CHAIN/gcc-$DOCKER_SH4_GCC_VER/config.guess $DC_CHAIN/gcc-$DOCKER_SH4_GCC_VER/config.sub $DC_CHAIN/gcc-$DOCKER_SH4_GCC_VER/mpfr-2.4.2/ \
-            && cp $DC_CHAIN/gcc-$DOCKER_SH4_GCC_VER/config.guess $DC_CHAIN/gcc-$DOCKER_SH4_GCC_VER/config.sub $DC_CHAIN/gcc-$DOCKER_SH4_GCC_VER/gmp-4.3.2/ \
-            && cp $DC_CHAIN/gcc-$DOCKER_SH4_GCC_VER/config.guess $DC_CHAIN/gcc-$DOCKER_SH4_GCC_VER/config.sub $DC_CHAIN/newlib-$DOCKER_SH4_NEWLIB_VER/ \
-            && cp $DC_CHAIN/gcc-$DOCKER_SH4_GCC_VER/config.guess $DC_CHAIN/gcc-$DOCKER_SH4_GCC_VER/config.sub $DC_CHAIN/binutils-$DOCKER_SH4_BINUTILS_VER/; \
-        else \
-            printf "No need to update config.guess since we're building GCC $KOS_GCC_VER on $TARGETPLATFORM...$NL"; \
-        fi \
-    && printf "Done.\n"
+# RUN \
+#     # Update arch detection when building GCC 4 for linux/arm64 platform
+#     . /tmp/dockerenv.sh \
+#     && printf "Updating arch detection if necessary...$NL" \
+#     && if [ "$KOS_GCC_VER" = "legacy" ] && [ "$TARGETPLATFORM" = "linux/arm64" ]; then \
+#             printf "Updating config.guess to support $TARGETPLATFORM when building GCC $KOS_GCC_VER...$NL" \
+#             # Download GCC and it's dependencies
+#             && make -C $DC_CHAIN fetch-sh4 \
+#             # Update the config.guess files so it knows what to do with an arm64 linux host
+#             && wget -O $DC_CHAIN/gcc-4.7.4/config.guess 'https://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.guess;hb=HEAD' &> $REDIRECT \
+#             && cp $DC_CHAIN/gcc-4.7.4/config.guess $DC_CHAIN/gcc-4.7.4/mpc/ \
+#             && cp $DC_CHAIN/gcc-4.7.4/config.guess $DC_CHAIN/gcc-4.7.4/libjava/libltdl/ \
+#             && cp $DC_CHAIN/gcc-4.7.4/config.guess $DC_CHAIN/gcc-4.7.4/libjava/classpath/ \
+#             && cp $DC_CHAIN/gcc-4.7.4/config.guess $DC_CHAIN/gcc-4.7.4/mpfr/ \
+#             && cp $DC_CHAIN/gcc-4.7.4/config.guess $DC_CHAIN/gcc-4.7.4/gmp/ \
+#             && cp $DC_CHAIN/gcc-4.7.4/config.guess $DC_CHAIN/newlib-2.0.0/ \
+#             && cp $DC_CHAIN/gcc-4.7.4/config.guess $DC_CHAIN/binutils-2.34/; \
+#         else \
+#             printf "No need to update config.guess since we're building GCC $KOS_GCC_VER on $TARGETPLATFORM...$NL"; \
+#         fi \
+#     && printf "Done.\n"
 RUN \
     # Build SH4 compiler toolchain
     . /tmp/dockerenv.sh \
@@ -231,11 +152,14 @@ RUN \
     && printf "Done.\n"
 
 #
-# Second stage: Alpine image with only the Dreamcast cross-compiler toolchain (no KOS) and minimal files to reduce image size
+# Second stage: Debian image with only the Dreamcast cross-compiler toolchain (no KOS) and minimal files to reduce image size
 #
 
-FROM alpine:latest
+FROM debian:12-slim
 LABEL maintainer "Ben Baron <ben@einsteinx2.com>"
+LABEL org.opencontainers.image.source=https://github.com/einsteinx2/docker-dcdev
+LABEL org.opencontainers.image.licenses=MIT
+LABEL org.opencontainers.image.description="The base image to create the final fully functional KOS toolchain images as KOS changes much more often than the GCC cross-compiler toolchain and takes much less time to compile."
 
 # Set build arguments
 ARG VERBOSE
@@ -245,15 +169,6 @@ ENV DCTOOLCHAIN="/opt/toolchains/dc"
 
 # Copy only the compiled toolchains from the build image to save space
 COPY --from=builder /tmp/copy $DCTOOLCHAIN
-
-# Install bash shell and tree
-RUN . $DCTOOLCHAIN/dockerenv.sh \
-    && rm -f $DCTOOLCHAIN/dockerenv.sh \
-    && printf "Installing bash and tree...$NL" \
-    && apk --update add --no-cache bash tree &> $REDIRECT \
-	&& rm -rf /var/cache/apk/* \
-    && printf ". /etc/profile\n" > /root/.bashrc \
-    && printf "Done.\n"
 
 # Default to /src directory
 WORKDIR /src
