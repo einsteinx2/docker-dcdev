@@ -141,7 +141,6 @@ RUN \
 RUN \
     # Build KOS
     . /tmp/dockerenv.sh && . $KOS/environ.sh \
-    && cat $KOS/environ_dreamcast.sh \
     && printf "Building KOS...$NL" \
     && make -j$DOCKER_THREADS -C $KOS &> $REDIRECT \
     && printf "Done.\nCleaning KOS...$NL" \
