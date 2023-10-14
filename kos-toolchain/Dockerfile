@@ -193,7 +193,8 @@ RUN \
     && ln -s $KOS/utils/genexports/genexports.sh $DCTOOLCHAIN/bin/genexports.sh \
     && ln -s $KOS/utils/genexports/genexportstubs.sh $DCTOOLCHAIN/bin/genexportstubs.sh \
     && ln -s $KOS/utils/genromfs/genromfs $DCTOOLCHAIN/bin/genromfs \
-    && ln -s $KOS/utils/genromfs/gentexfont $DCTOOLCHAIN/bin/gentexfont \
+    # TODO: gentexfont doesn't actually build
+    && ln -s $KOS/utils/gentexfont/gentexfont $DCTOOLCHAIN/bin/gentexfont \
     && ln -s $KOS/utils/ipload/ipload.py $DCTOOLCHAIN/bin/ipload.py \
     && ln -s $KOS/utils/isotest/isotest $DCTOOLCHAIN/bin/isotest \
     && ln -s $KOS/utils/kmgenc/kmgenc $DCTOOLCHAIN/bin/kmgenc \
