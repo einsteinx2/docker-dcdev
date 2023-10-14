@@ -245,8 +245,6 @@ RUN \
     && mv /tmp/dockerenv.sh /root/.bashrc /tmp/copy \
     # Always source the KOS environment
     && printf ". $KOS/environ.sh\n" >> /tmp/copy/.bashrc \
-    # Add the utilities to the path
-    && printf "export PATH=\"$DCTOOLCHAIN/bin:\$PATH\"" >> /tmp/copy/.bashrc \
     && printf "Done.\n"
 
 #
