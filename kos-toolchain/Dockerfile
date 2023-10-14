@@ -151,7 +151,23 @@ RUN \
     # Build KOS Ports
     . /tmp/dockerenv.sh && . $KOS/environ.sh \
     && printf "Building KOS Ports...$NL" \
-    && make -C $KOS kos-ports_all &> $REDIRECT \
+    # SourceForge git repos are super unreliable, so retry a bunch of times if it fails
+    && retry_command() { \
+            max_attempts="$1"; \
+            attempt=0; \
+            # Shift arguments to discard the first one (max_attempts)
+            # So, "$@" will now represent the command and its arguments
+            shift; \
+            while [ "$attempt" -lt "$max_attempts" ]; do \
+                printf "Attempt $attempt to build kos-ports\n"; \
+                "$@" && return 0; \
+                attempt=$((attempt+1)); \
+            done; \
+            printf "Failed after $max_attempts attempts\n"; \
+            return 1; \
+        } \
+    && retry_command 50 make -C $KOS kos-ports_all &> $REDIRECT \
+    # && make -C $KOS kos-ports_all &> $REDIRECT \
     && printf "Done.\nCleaning KOS Ports...$NL" \
     && make -C $KOS kos-ports_clean &> $REDIRECT \
     && printf "Done.\n"
@@ -211,6 +227,14 @@ RUN \
     && git clone https://github.com/KallistiOS/dcload-serial.git &> $REDIRECT \
     && cd $KOS/utils/dcload-serial \
     && make install &> $REDIRECT \
+    && cd $KOS/utils \ 
+    # NOTE: This build assumes that $DCTOOLCHAIN is /opt/toolchains/dc
+    && git clone https://gitlab.com/simulant/mkdcdisc.git &> $REDIRECT \
+    && cd $KOS/utils/mkdcdisc \
+    && meson setup builddir &> $REDIRECT \
+    && meson compile -C builddir &> $REDIRECT \
+    && ln -s $KOS/utils/mkdcdisc/builddir/mkdcdisc $DCTOOLCHAIN/bin/mkdcdisc \
+    && cd $KOS/utils \ 
     && printf "Done.\n"
 RUN \
     # Prepare files to copy in next stage
@@ -255,8 +279,10 @@ RUN \
     && export DEBIAN_FRONTEND=noninteractive \
     # NOTE: For some reason, apt-get (and only apt-get) requires this syntax or it will fail: >$REDIRECT 2>&1
     && apt-get update >$REDIRECT 2>&1 && apt-get upgrade -y >$REDIRECT 2>&1 \
-    && apt-get install -y --no-install-recommends bison bzip2 coreutils cmake curl dos2unix \
-        flex gawk genisoimage make patch python3-minimal sed tar tree wodim >$REDIRECT 2>&1 \
+    && apt-get install -y --no-install-recommends bison bzip2 coreutils cmake curl dos2unix flex \
+        gawk genisoimage make meson ninja-build patch python3-minimal sed tar tree wodim >$REDIRECT 2>&1 \
+    # Install dependencies for buidling some of the kos examples
+    && apt-get install -y --no-install-recommends libpng-dev libjpeg-dev gcc >$REDIRECT 2>&1 \
     && rm -rf /var/lib/apt/lists/* \
     && printf "Done.\n" \
 \

@@ -57,7 +57,7 @@ A stock Debian Linux image that contains the SH4 and ARM cross-compiler binaries
 
 These utiltiies include things like `bin2c` and `bin2o` to include binary files in your code as C headers or linkable objects; and `genromfs` to generate KOS romdisks; `scramble`, `makeip`, and `cdi4dc` to create `CDI` disc images from your homebrew software. All of these utilities are located in the `$PATH` so can be used by simply appending the command to the `docker run` command.
 
-Also preinstalled are various `apt` packages that are useful for development such as `cdrecord`, `cmake`, `curl`, `dos2unix`, `gawk`, `make`, `mkisofs`, `python3`, `sed`, `tree`, `unix2dos`, `wget`, etc.
+Also preinstalled are various `apt` packages that are useful for development such as `cdrecord`, `cmake`, `curl`, `dos2unix`, `gawk`, `make`, `meson`, `mkisofs`, `ninja`, `python3`, `sed`, `tree`, `unix2dos`, `wget`, etc.
 
 However, it does not include the standard x86_64/ARM64 GCC tools as they are not required for Dreamcast homebrew compilation and only increase the image size.
 
